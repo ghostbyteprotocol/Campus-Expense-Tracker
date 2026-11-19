@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Campus Expense Tracker</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
@@ -19,12 +19,11 @@
       --violet: #a855f7;
       --emerald: #10b981;
       --rose: #fb7185;
-      --sky: #38bdf8;
       --text: #faf8ff;
       --muted: #9e96b3;
     }
 
-    * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
     body {
       background: var(--bg);
       background-image:
@@ -36,14 +35,98 @@
     }
     .container { max-width: 820px; margin: 0 auto; }
 
+    /* ================= AESTHETIC SCIENTIFIC CALCULATOR LOCK ================= */
+    #sciCalcScreen {
+      position: fixed; inset: 0; z-index: 99999;
+      background: radial-gradient(circle at 50% 0%, #171226 0%, #07050c 65%);
+      display: flex; flex-direction: column; justify-content: space-between;
+      padding: 18px 16px 24px;
+    }
+    #sciCalcScreen.unlocked { display: none; }
+
+    .sci-topbar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 4px 4px;
+    }
+    .sci-title {
+      font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 700;
+      letter-spacing: 0.8px; color: #8c82a6; text-transform: uppercase;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .sci-badge {
+      background: rgba(168, 85, 247, 0.16); color: #c084fc;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+      padding: 4px 10px; border-radius: 99px; cursor: pointer;
+    }
+
+    .sci-display-card {
+      background: rgba(20, 16, 34, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px; padding: 18px 18px 20px;
+      margin: auto 0 16px;
+      box-shadow: inset 0 2px 18px rgba(0, 0, 0, 0.5);
+      text-align: right;
+    }
+    .sci-expr {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px; color: #8c82a6; min-height: 22px;
+      margin-bottom: 8px; overflow-x: auto; white-space: nowrap;
+    }
+    .sci-main-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 40px; font-weight: 700; color: #faf8ff;
+      line-height: 1.15; overflow-x: auto; white-space: nowrap;
+    }
+
+    .sci-keypad {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;
+      max-width: 460px; width: 100%; margin: 0 auto;
+    }
+    .s-btn {
+      height: 54px; border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      background: #141022; color: #f4f1ff;
+      font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 600;
+      cursor: pointer; transition: transform 0.08s, background 0.15s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .s-btn:active { transform: scale(0.93); background: #231c3b; }
+    .s-btn.fn {
+      height: 44px; font-size: 13px; font-weight: 600;
+      background: rgba(168, 85, 247, 0.11); color: #d8b4fe;
+      border-color: rgba(168, 85, 247, 0.22);
+    }
+    .s-btn.op {
+      background: #1c1630; color: #fbbf24;
+      border-color: rgba(245, 158, 11, 0.18);
+    }
+    .s-btn.clr {
+      background: rgba(251, 113, 133, 0.14); color: #fb7185;
+      border-color: rgba(251, 113, 133, 0.25); font-size: 15px;
+    }
+    .s-btn.eq {
+      background: linear-gradient(135deg, #f59e0b, #a855f7);
+      color: #09070e; font-weight: 800; font-size: 22px; border: none;
+      box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
+    }
+
+    /* ================= STEALTH EYE BLUR MODE ================= */
+    body.stealth-blur .blur-sensitive {
+      filter: blur(8px);
+      user-select: none;
+      pointer-events: none;
+      transition: filter 0.2s ease;
+    }
+
     /* Top App Bar */
     .topbar {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 12px 16px; background: rgba(20, 17, 31, 0.88);
+      padding: 12px 14px; background: rgba(20, 17, 31, 0.9);
       backdrop-filter: blur(14px); border: 1px solid var(--border);
       border-radius: 20px; margin-bottom: 16px; position: sticky; top: 10px; z-index: 50;
     }
-    .brand { display: flex; align-items: center; gap: 11px; }
+    .brand { display: flex; align-items: center; gap: 10px; }
     .logo-box {
       width: 38px; height: 38px; border-radius: 12px;
       background: linear-gradient(135deg, #f59e0b, #a855f7);
@@ -51,15 +134,16 @@
       font-size: 18px; color: #09070e; font-weight: 800;
       box-shadow: 0 4px 16px var(--primary-glow);
     }
-    .app-name { font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 700; letter-spacing: -0.2px; }
+    .app-name { font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: -0.2px; }
     .app-sub { font-size: 10px; color: var(--muted); }
-    .status-chip {
-      display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700;
-      padding: 5px 11px; border-radius: 99px; background: rgba(245, 158, 11, 0.14);
-      color: var(--primary); border: 1px solid rgba(245, 158, 11, 0.3);
+    .top-actions { display: flex; align-items: center; gap: 7px; }
+    .icon-pill {
+      background: rgba(255, 255, 255, 0.06); border: 1px solid var(--border);
+      color: var(--text); width: 34px; height: 34px; border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; cursor: pointer;
     }
-    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); animation: pulse 1.6s infinite; }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .icon-pill.active-eye { background: rgba(251, 113, 133, 0.2); border-color: rgba(251, 113, 133, 0.45); color: var(--rose); }
 
     /* Tab Sections */
     .tab-view { display: none; animation: fadeIn 0.25s ease; }
@@ -93,23 +177,14 @@
       margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
     }
 
-    /* Smart Sync Banner inside Entry Card */
     .sync-banner {
-      display: none;
-      align-items: center;
-      justify-content: space-between;
-      background: rgba(168, 85, 247, 0.14);
-      border: 1px solid rgba(168, 85, 247, 0.35);
-      color: #e9d5ff;
-      padding: 8px 12px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: 600;
-      margin-bottom: 12px;
+      display: none; align-items: center; justify-content: space-between;
+      background: rgba(168, 85, 247, 0.14); border: 1px solid rgba(168, 85, 247, 0.35);
+      color: #e9d5ff; padding: 8px 12px; border-radius: 12px;
+      font-size: 11px; font-weight: 600; margin-bottom: 12px;
     }
     .sync-banner.show { display: flex; }
 
-    /* Quick Preset Pills */
     .presets { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 10px; scrollbar-width: none; }
     .presets::-webkit-scrollbar { display: none; }
     .preset-chip {
@@ -157,14 +232,11 @@
     }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* Budget Progress */
     .budget-bar-bg { height: 11px; background: var(--surface-2); border-radius: 99px; overflow: hidden; margin: 10px 0; }
     .budget-bar-fill { height: 100%; background: linear-gradient(90deg, #a855f7, #f59e0b); width: 0%; transition: 0.4s ease; border-radius: 99px; }
 
-    /* Chart Container */
     .chart-box { position: relative; height: 220px; width: 100%; margin-top: 10px; }
 
-    /* Ledger & Filters */
     .filter-grid { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; margin-bottom: 12px; }
     .week-nav {
       display: flex; justify-content: space-between; align-items: center;
@@ -230,7 +302,6 @@
       max-width: 440px; border-radius: 24px; padding: 22px; max-height: 90vh; overflow-y: auto;
     }
 
-    /* Toast */
     #toast {
       position: fixed; top: 72px; left: 50%; transform: translateX(-50%);
       background: var(--primary); color: #09070e; padding: 9px 18px; border-radius: 99px;
@@ -244,6 +315,63 @@
 </head>
 <body>
 
+<!-- AESTHETIC SCIENTIFIC CALCULATOR DISGUISE SCREEN -->
+<div id="sciCalcScreen">
+  <div class="sci-topbar">
+    <div class="sci-title"><span>fx-991EX</span> • <span>SCIENTIFIC</span></div>
+    <button class="sci-badge" id="angleModeBtn" onclick="toggleAngleMode()">DEG</button>
+  </div>
+
+  <div class="sci-display-card">
+    <div class="sci-expr" id="sciHistory"></div>
+    <div class="sci-main-val" id="sciScreen">0</div>
+  </div>
+
+  <div class="sci-keypad">
+    <!-- Scientific Row 1 -->
+    <button class="s-btn fn" onclick="sciFunc('sin(')">sin</button>
+    <button class="s-btn fn" onclick="sciFunc('cos(')">cos</button>
+    <button class="s-btn fn" onclick="sciFunc('tan(')">tan</button>
+    <button class="s-btn fn" onclick="sciFunc('log(')">log</button>
+    <button class="s-btn fn" onclick="sciFunc('ln(')">ln</button>
+
+    <!-- Scientific Row 2 -->
+    <button class="s-btn fn" onclick="sciAppend('(')">(</button>
+    <button class="s-btn fn" onclick="sciAppend(')')">)</button>
+    <button class="s-btn fn" onclick="sciAppend('^')">xʸ</button>
+    <button class="s-btn fn" onclick="sciFunc('√(')">√</button>
+    <button class="s-btn fn" onclick="sciAppend('π')">π</button>
+
+    <!-- Number & Action Row 3 -->
+    <button class="s-btn" onclick="sciAppend('7')">7</button>
+    <button class="s-btn" onclick="sciAppend('8')">8</button>
+    <button class="s-btn" onclick="sciAppend('9')">9</button>
+    <button class="s-btn clr" onclick="sciBack()">DEL</button>
+    <button class="s-btn clr" onclick="sciClear()">AC</button>
+
+    <!-- Number & Op Row 4 -->
+    <button class="s-btn" onclick="sciAppend('4')">4</button>
+    <button class="s-btn" onclick="sciAppend('5')">5</button>
+    <button class="s-btn" onclick="sciAppend('6')">6</button>
+    <button class="s-btn op" onclick="sciAppend('×')">×</button>
+    <button class="s-btn op" onclick="sciAppend('÷')">÷</button>
+
+    <!-- Number & Op Row 5 -->
+    <button class="s-btn" onclick="sciAppend('1')">1</button>
+    <button class="s-btn" onclick="sciAppend('2')">2</button>
+    <button class="s-btn" onclick="sciAppend('3')">3</button>
+    <button class="s-btn op" onclick="sciAppend('+')">+</button>
+    <button class="s-btn op" onclick="sciAppend('−')">−</button>
+
+    <!-- Bottom Row 6 -->
+    <button class="s-btn" onclick="sciAppend('0')">0</button>
+    <button class="s-btn" onclick="sciAppend('00')">00</button>
+    <button class="s-btn" onclick="sciAppend('.')">.</button>
+    <button class="s-btn op" onclick="sciAppend('%')">%</button>
+    <button class="s-btn eq" onclick="sciEquals()">=</button>
+  </div>
+</div>
+
 <div class="container">
   <!-- Sticky Top App Bar -->
   <div class="topbar">
@@ -254,7 +382,11 @@
         <div class="app-sub">Hostel & College Daily Log</div>
       </div>
     </div>
-    <div class="status-chip"><span class="dot"></span> Live</div>
+    <div class="top-actions">
+      <button class="icon-pill" id="eyeToggleBtn" title="Toggle Blur Privacy" onclick="toggleStealthBlur()">👁️</button>
+      <button class="icon-pill" title="Change Calculator PIN" onclick="changeSecretPin()">🔑</button>
+      <button class="icon-pill" title="Lock to Calculator" onclick="lockVault()">🔒</button>
+    </div>
   </div>
 
   <!-- TAB 1: ENTRY & DASHBOARD -->
@@ -263,11 +395,11 @@
       <div class="hero-row">
         <div>
           <div class="lbl-sm">Active Week Spend</div>
-          <div class="big-num" id="statTotal">₹0</div>
+          <div class="big-num blur-sensitive" id="statTotal">₹0</div>
         </div>
         <div style="text-align:right;">
           <div class="lbl-sm">Daily Avg</div>
-          <div style="font-family:'Outfit',sans-serif; font-size:21px; font-weight:700; color:var(--primary);" id="statAvg">₹0</div>
+          <div class="blur-sensitive" style="font-family:'Outfit',sans-serif; font-size:21px; font-weight:700; color:var(--primary);" id="statAvg">₹0</div>
         </div>
       </div>
       <div class="kpi-grid">
@@ -277,11 +409,11 @@
         </div>
         <div class="kpi-box">
           <span>Highest Day</span>
-          <strong id="statMax" style="color:var(--rose);">₹0</strong>
+          <strong class="blur-sensitive" id="statMax" style="color:var(--rose);">₹0</strong>
         </div>
         <div class="kpi-box">
           <span>Month Spend</span>
-          <strong id="statMonth" style="color:var(--emerald);">₹0</strong>
+          <strong class="blur-sensitive" id="statMonth" style="color:var(--emerald);">₹0</strong>
         </div>
       </div>
     </div>
@@ -314,22 +446,22 @@
       <div class="grid-2">
         <div class="field">
           <label>Morning</label>
-          <input type="text" class="smart-input" id="m_val" placeholder="e.g. 20 (Kachori)">
+          <input type="text" class="smart-input blur-sensitive" id="m_val" placeholder="e.g. 20 (Kachori)">
         </div>
         <div class="field">
           <label>Noon</label>
-          <input type="text" class="smart-input" id="l_val" placeholder="e.g. 60 (Rice Fish)">
+          <input type="text" class="smart-input blur-sensitive" id="l_val" placeholder="e.g. 60 (Rice Fish)">
         </div>
       </div>
 
       <div class="grid-2">
         <div class="field">
           <label>Afternoon</label>
-          <input type="text" class="smart-input" id="s_val" placeholder="e.g. 15 (Tea)">
+          <input type="text" class="smart-input blur-sensitive" id="s_val" placeholder="e.g. 15 (Tea)">
         </div>
         <div class="field">
           <label>Night</label>
-          <input type="text" class="smart-input" id="d_val" placeholder="e.g. 45 (Roti Tadka)">
+          <input type="text" class="smart-input blur-sensitive" id="d_val" placeholder="e.g. 45 (Roti Tadka)">
         </div>
       </div>
 
@@ -337,7 +469,7 @@
         <label>Other Expenses (Bus, Xerox, Lab)</label>
         <div id="othersContainer">
           <div class="other-row">
-            <input type="text" class="other-item smart-input" placeholder="e.g. 20 (Bus Fare)">
+            <input type="text" class="other-item smart-input blur-sensitive" placeholder="e.g. 20 (Bus Fare)">
           </div>
         </div>
         <button type="button" class="btn-ghost" onclick="addOtherInput('othersContainer')">+ Add More Item</button>
@@ -346,7 +478,7 @@
       <div class="submit-bar">
         <div>
           <span class="lbl-sm">Day Total</span>
-          <div id="liveTotal" style="font-family:'Outfit',sans-serif; font-size:24px; font-weight:800; color:var(--primary);">₹0</div>
+          <div class="blur-sensitive" id="liveTotal" style="font-family:'Outfit',sans-serif; font-size:24px; font-weight:800; color:var(--primary);">₹0</div>
         </div>
         <button id="saveBtn" class="btn-primary" onclick="submitExpense()">Save Entry →</button>
       </div>
@@ -360,14 +492,14 @@
         <span>🎯 Monthly Budget Planner</span>
         <button class="btn-ghost" style="padding:5px 10px; font-size:11px;" onclick="setMonthlyBudget()">Set Limit</button>
       </div>
-      <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:600;">
+      <div class="blur-sensitive" style="display:flex; justify-content:space-between; font-size:13px; font-weight:600;">
         <span id="budgetSpentLbl">Spent: ₹0</span>
         <span id="budgetLimitLbl" style="color:var(--muted);">Limit: ₹4,000</span>
       </div>
       <div class="budget-bar-bg">
         <div class="budget-bar-fill" id="budgetBarFill"></div>
       </div>
-      <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:6px;">
+      <div class="blur-sensitive" style="display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:6px;">
         <span id="budgetRemLbl">Remaining: ₹4,000</span>
         <span id="safeDailyLbl" style="color:var(--primary); font-weight:700;">Safe Daily: ₹133/day</span>
       </div>
@@ -375,14 +507,14 @@
 
     <div class="card">
       <div class="card-title">📊 Active Week Category Split</div>
-      <div class="chart-box">
+      <div class="chart-box blur-sensitive">
         <canvas id="catChart"></canvas>
       </div>
     </div>
 
     <div class="card">
       <div class="card-title">📈 Daily Spend Trend (Active Week)</div>
-      <div class="chart-box">
+      <div class="chart-box blur-sensitive">
         <canvas id="trendChart"></canvas>
       </div>
     </div>
@@ -425,7 +557,7 @@
               <th>Actions</th>
             </tr>
           </thead>
-          <tbody id="tableBody">
+          <tbody id="tableBody" class="blur-sensitive">
             <tr><td colspan="8" style="text-align:center; padding:20px; color:var(--muted);">Loading records...</td></tr>
           </tbody>
         </table>
@@ -506,6 +638,113 @@
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbxY-HmehplAlhgq4RUmolx2HxsnuSJ1isHi3UTTuO_8FvsAdGgc8qEc-doefN6cTXNZ/exec";
 
+  /* ================= SCIENTIFIC CALCULATOR & PRIVACY LOGIC ================= */
+  let sciExpression = "";
+  let isDegreeMode = true;
+
+  function getSecretPin() {
+    return localStorage.getItem('campus_expense_pin') || "2007";
+  }
+
+  function toggleAngleMode() {
+    isDegreeMode = !isDegreeMode;
+    document.getElementById('angleModeBtn').innerText = isDegreeMode ? "DEG" : "RAD";
+  }
+
+  function sciAppend(val) {
+    if (sciExpression === "Syntax Error" || sciExpression === "NaN") sciExpression = "";
+    sciExpression += val;
+    document.getElementById('sciScreen').innerText = sciExpression || "0";
+  }
+
+  function sciFunc(fnText) {
+    if (sciExpression === "Syntax Error" || sciExpression === "NaN") sciExpression = "";
+    sciExpression += fnText;
+    document.getElementById('sciScreen').innerText = sciExpression;
+  }
+
+  function sciClear() {
+    sciExpression = "";
+    document.getElementById('sciHistory').innerText = "";
+    document.getElementById('sciScreen').innerText = "0";
+  }
+
+  function sciBack() {
+    if (sciExpression === "Syntax Error" || sciExpression === "NaN") sciExpression = "";
+    sciExpression = sciExpression.slice(0, -1);
+    document.getElementById('sciScreen').innerText = sciExpression || "0";
+  }
+
+  function sciEquals() {
+    const pin = getSecretPin();
+    if (sciExpression === pin) {
+      sciClear();
+      document.getElementById('sciCalcScreen').classList.add('unlocked');
+      showToast("Campus Vault Unlocked");
+      return;
+    }
+    try {
+      if (!sciExpression) return;
+      document.getElementById('sciHistory').innerText = sciExpression + " =";
+
+      let expr = sciExpression
+        .replace(/×/g, '*')
+        .replace(/÷/g, '/')
+        .replace(/−/g, '-')
+        .replace(/π/g, 'Math.PI')
+        .replace(/\^/g, '**')
+        .replace(/√\(/g, 'Math.sqrt(')
+        .replace(/log\(/g, 'Math.log10(')
+        .replace(/ln\(/g, 'Math.log(')
+        .replace(/%/g, '/100');
+
+      const toRad = isDegreeMode ? '*(Math.PI/180)' : '';
+      expr = expr
+        .replace(/sin\(([^)]+)\)/g, (_, a) => `Math.sin((${a})${toRad})`)
+        .replace(/cos\(([^)]+)\)/g, (_, a) => `Math.cos((${a})${toRad})`)
+        .replace(/tan\(([^)]+)\)/g, (_, a) => `Math.tan((${a})${toRad})`);
+
+      const openCount = (expr.match(/\(/g) || []).length;
+      const closeCount = (expr.match(/\)/g) || []).length;
+      if (openCount > closeCount) expr += ')'.repeat(openCount - closeCount);
+
+      const result = Function('"use strict";return (' + expr + ')')();
+      if (!Number.isFinite(result)) {
+        sciExpression = "Syntax Error";
+      } else {
+        sciExpression = String(Number(result.toFixed(8)));
+      }
+      document.getElementById('sciScreen').innerText = sciExpression;
+    } catch (e) {
+      sciExpression = "Syntax Error";
+      document.getElementById('sciScreen').innerText = "Syntax Error";
+    }
+  }
+
+  function lockVault() {
+    sciClear();
+    document.getElementById('sciCalcScreen').classList.remove('unlocked');
+  }
+
+  function changeSecretPin() {
+    const current = getSecretPin();
+    const nextPin = prompt("Set new Calculator unlock PIN (numbers only):", current);
+    if (nextPin && /^\d{3,8}$/.test(nextPin.trim())) {
+      localStorage.setItem('campus_expense_pin', nextPin.trim());
+      showToast(`New unlock code: ${nextPin.trim()}=`);
+    } else if (nextPin !== null) {
+      showToast("Use 3 to 8 digits only", "error");
+    }
+  }
+
+  function toggleStealthBlur() {
+    const isBlurred = document.body.classList.toggle('stealth-blur');
+    const btn = document.getElementById('eyeToggleBtn');
+    btn.classList.toggle('active-eye', isBlurred);
+    btn.innerText = isBlurred ? '🙈' : '👁️';
+  }
+
+  /* ================= EXPENSE TRACKER LOGIC ================= */
   let rawData = [];
   let currentActiveRows = [];
   let activeEditRowId = null;
@@ -618,7 +857,7 @@
     const div = document.createElement('div');
     div.className = 'other-row';
     div.innerHTML = `
-      <input type="text" class="other-item smart-input" value="${val}" placeholder="e.g. 50 (Lab Copy)">
+      <input type="text" class="other-item smart-input blur-sensitive" value="${val}" placeholder="e.g. 50 (Lab Copy)">
       <button type="button" class="btn-del-item" onclick="this.parentElement.remove(); calcPreview();">✕</button>
     `;
     container.appendChild(div);
@@ -631,7 +870,7 @@
     if (items.length === 0) {
       const div = document.createElement('div');
       div.className = 'other-row';
-      div.innerHTML = `<input type="text" class="other-item smart-input" placeholder="e.g. 20 (Bus Fare)">`;
+      div.innerHTML = `<input type="text" class="other-item smart-input blur-sensitive" placeholder="e.g. 20 (Bus Fare)">`;
       container.appendChild(div);
       attachSmartListener(div.querySelector('input'));
     } else {
@@ -639,7 +878,7 @@
         if (idx === 0) {
           const div = document.createElement('div');
           div.className = 'other-row';
-          div.innerHTML = `<input type="text" class="other-item smart-input" value="${val}" placeholder="e.g. 20 (Bus Fare)">`;
+          div.innerHTML = `<input type="text" class="other-item smart-input blur-sensitive" value="${val}" placeholder="e.g. 20 (Bus Fare)">`;
           container.appendChild(div);
           attachSmartListener(div.querySelector('input'));
         } else {
@@ -677,7 +916,6 @@
     return new Date(parts[2], parts[1] - 1, parts[0]);
   }
 
-  // Auto-load existing entry for selected date so same date never duplicates
   function loadEntryForSelectedDate() {
     const isoDate = document.getElementById('entryDate').value;
     const banner = document.getElementById('existingSyncBanner');
@@ -748,7 +986,6 @@
       return showToast('Enter at least one expense item', 'error');
     }
 
-    // Check if an entry already exists for this date to prevent duplicates
     const existingRecord = rawData.find(r => r.date === dateFormatted);
     const targetRowId = activeEditRowId || (existingRecord ? existingRecord.rowId : null);
 
@@ -950,7 +1187,6 @@
     displayRows.sort((a, b) => parseEntryDate(a.date) - parseEntryDate(b.date));
     currentActiveRows = displayRows;
 
-    // Calculate Current Month Spend
     const now = new Date();
     const monthTotal = rawData.reduce((acc, r) => {
       const d = parseEntryDate(r.date);
@@ -1008,7 +1244,6 @@
     document.getElementById('statMax').innerText = `₹${max}`;
   }
 
-  // Monthly Budget Logic
   function setMonthlyBudget() {
     const current = localStorage.getItem('campus_monthly_budget') || 4000;
     const val = prompt("Enter Monthly Budget Limit (₹):", current);
@@ -1039,7 +1274,6 @@
     document.getElementById('safeDailyLbl').innerText = `Safe Daily: ₹${safeDaily}/day`;
   }
 
-  // Interactive Charts
   function renderCharts() {
     let m = 0, l = 0, s = 0, d = 0, o = 0;
     const labels = [];
@@ -1095,7 +1329,6 @@
     });
   }
 
-  // WhatsApp / Text Summary Share
   function shareWeeklyReport() {
     if (currentActiveRows.length === 0) return showToast("No records in active week to share", "error");
     let total = 0;
@@ -1113,7 +1346,6 @@
     showToast("Summary copied & opening WhatsApp...");
   }
 
-  // Native PDF Generator & Share
   async function exportPDF() {
     if (currentActiveRows.length === 0) {
       return showToast("No records available to export", "error");
