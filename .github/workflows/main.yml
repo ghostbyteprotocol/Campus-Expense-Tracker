@@ -32,18 +32,9 @@ jobs:
           npm install -D @capacitor/assets --no-audit --no-fund
           npm run build
           mkdir -p assets
-          IMG_FILE=$(ls *.png *.PNG *.jpg *.JPG *.jpeg *.JPEG *.webp 2>/dev/null | head -n 1)
-          if [ -n "$IMG_FILE" ]; then
-            echo "Found custom image: $IMG_FILE"
-            convert "$IMG_FILE" -resize 1024x1024! assets/icon-only.png
-            cp assets/icon-only.png assets/icon-foreground.png
-            cp assets/icon-only.png assets/splash.png
-          else
-            echo "No image found, creating fallback icon"
-            convert -size 1024x1024 xc:'#1e1438' -fill '#f59e0b' -draw "circle 512,512 512,180" assets/icon-only.png
-            cp assets/icon-only.png assets/icon-foreground.png
-            cp assets/icon-only.png assets/splash.png
-          fi
+          cp 15994.png assets/icon-only.png
+          cp 15994.png assets/icon-foreground.png
+          cp 15994.png assets/splash.png
           rm -f capacitor.config.json capacitor.config.ts
           cat << 'EOF' > capacitor.config.json
           {
