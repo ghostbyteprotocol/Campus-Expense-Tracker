@@ -32,8 +32,7 @@ jobs:
           npm install -D @capacitor/assets --no-audit --no-fund
           npm run build
           mkdir -p assets
-          cp 15994.png assets/icon-only.png
-          cp 15994.png assets/icon-foreground.png
+          cp 15994.png assets/icon.png
           cp 15994.png assets/splash.png
           rm -f capacitor.config.json capacitor.config.ts
           cat << 'EOF' > capacitor.config.json
