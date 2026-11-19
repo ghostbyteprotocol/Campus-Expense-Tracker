@@ -25,7 +25,7 @@ jobs:
 
       - name: Build Web & Android Project
         run: |
-          npm install
+          npm install --no-audit --no-fund
           npm run build
           npx cap add android
           npx cap sync android
