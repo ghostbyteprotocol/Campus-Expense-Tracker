@@ -90,8 +90,24 @@
     }
     .card-title {
       font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700;
-      margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
     }
+
+    /* Smart Sync Banner inside Entry Card */
+    .sync-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(168, 85, 247, 0.14);
+      border: 1px solid rgba(168, 85, 247, 0.35);
+      color: #e9d5ff;
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .sync-banner.show { display: flex; }
 
     /* Quick Preset Pills */
     .presets { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 10px; scrollbar-width: none; }
@@ -132,6 +148,12 @@
       background: linear-gradient(135deg, #f59e0b, #d97706); color: #09070e;
       border: none; padding: 13px 22px; border-radius: 14px; font-size: 14px;
       font-weight: 800; cursor: pointer; box-shadow: 0 4px 18px var(--primary-glow);
+      transition: 0.2s;
+    }
+    .btn-primary.update-mode {
+      background: linear-gradient(135deg, #a855f7, #7e22ce);
+      color: #fff;
+      box-shadow: 0 4px 18px rgba(168, 85, 247, 0.35);
     }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -270,6 +292,12 @@
         <span style="font-size:11px; color:var(--primary); font-weight:500;">Number + Space = ( )</span>
       </div>
 
+      <!-- Existing Date Sync Indicator -->
+      <div id="existingSyncBanner" class="sync-banner">
+        <span id="syncBannerText">✏️ Existing entry loaded — add or edit items</span>
+        <span style="font-size:10px; opacity:0.85;">No Duplicate</span>
+      </div>
+
       <!-- One-Tap Quick Presets -->
       <div class="presets">
         <button type="button" class="preset-chip" onclick="quickFill('m_val', '20 (Breakfast)')">+ ₹20 Breakfast</button>
@@ -279,8 +307,8 @@
       </div>
 
       <div class="field">
-        <label>Date (Auto IST Sync)</label>
-        <input type="date" id="entryDate">
+        <label>Date (Auto IST Sync — Loads Existing Log)</label>
+        <input type="date" id="entryDate" onchange="loadEntryForSelectedDate()">
       </div>
 
       <div class="grid-2">
@@ -317,7 +345,7 @@
 
       <div class="submit-bar">
         <div>
-          <span class="lbl-sm">Entry Total</span>
+          <span class="lbl-sm">Day Total</span>
           <div id="liveTotal" style="font-family:'Outfit',sans-serif; font-size:24px; font-weight:800; color:var(--primary);">₹0</div>
         </div>
         <button id="saveBtn" class="btn-primary" onclick="submitExpense()">Save Entry →</button>
@@ -480,6 +508,7 @@
 
   let rawData = [];
   let currentActiveRows = [];
+  let activeEditRowId = null;
   let weekOffset = 0;
   let lastSyncedDateStr = "";
   let catChartInstance = null;
@@ -512,7 +541,11 @@
   function syncDateIfNeeded(force = false) {
     const currentLocalDate = getLocalTodayISO();
     const dateInput = document.getElementById('entryDate');
-    if (force || !dateInput.value || dateInput.value === lastSyncedDateStr) {
+    const changed = force || !dateInput.value || dateInput.value === lastSyncedDateStr;
+    if (changed && dateInput.value !== currentLocalDate) {
+      dateInput.value = currentLocalDate;
+      loadEntryForSelectedDate();
+    } else if (!dateInput.value) {
       dateInput.value = currentLocalDate;
     }
     lastSyncedDateStr = currentLocalDate;
@@ -539,6 +572,10 @@
     t.style.color = type === 'error' ? '#fff' : '#09070e';
     t.style.display = 'block';
     setTimeout(() => { t.style.display = 'none'; }, 2800);
+  }
+
+  function cleanItemText(str) {
+    return String(str || '').replace(/\s*\(\s*\)/g, '').trim();
   }
 
   function extractAmount(str) {
@@ -588,12 +625,36 @@
     attachSmartListener(div.querySelector('input'));
   }
 
+  function resetOthersContainer(containerId, items = []) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    if (items.length === 0) {
+      const div = document.createElement('div');
+      div.className = 'other-row';
+      div.innerHTML = `<input type="text" class="other-item smart-input" placeholder="e.g. 20 (Bus Fare)">`;
+      container.appendChild(div);
+      attachSmartListener(div.querySelector('input'));
+    } else {
+      items.forEach((val, idx) => {
+        if (idx === 0) {
+          const div = document.createElement('div');
+          div.className = 'other-row';
+          div.innerHTML = `<input type="text" class="other-item smart-input" value="${val}" placeholder="e.g. 20 (Bus Fare)">`;
+          container.appendChild(div);
+          attachSmartListener(div.querySelector('input'));
+        } else {
+          addOtherInput(containerId, val);
+        }
+      });
+    }
+  }
+
   function getDynamicOthers(containerId) {
     const inputs = document.querySelectorAll(`#${containerId} .other-item`);
     let items = [];
     let total = 0;
     inputs.forEach(inp => {
-      const val = inp.value.trim();
+      const val = cleanItemText(inp.value);
       if (val) {
         items.push(val);
         total += extractAmount(val);
@@ -616,10 +677,54 @@
     return new Date(parts[2], parts[1] - 1, parts[0]);
   }
 
+  // Auto-load existing entry for selected date so same date never duplicates
+  function loadEntryForSelectedDate() {
+    const isoDate = document.getElementById('entryDate').value;
+    const banner = document.getElementById('existingSyncBanner');
+    const saveBtn = document.getElementById('saveBtn');
+
+    if (!isoDate) return;
+    const dateFormatted = formatDateWithDay(isoDate);
+    const existing = rawData.find(r => r.date === dateFormatted);
+
+    if (existing) {
+      activeEditRowId = existing.rowId;
+      document.getElementById('m_val').value = existing.morning === "-" ? "" : existing.morning;
+      document.getElementById('l_val').value = existing.noon === "-" ? "" : existing.noon;
+      document.getElementById('s_val').value = existing.afternoon === "-" ? "" : existing.afternoon;
+      document.getElementById('d_val').value = existing.night === "-" ? "" : existing.night;
+
+      if (existing.other && existing.other !== "-") {
+        const parts = existing.other.split(',').map(p => p.trim()).filter(Boolean);
+        resetOthersContainer('othersContainer', parts);
+      } else {
+        resetOthersContainer('othersContainer', []);
+      }
+
+      document.getElementById('syncBannerText').innerText = `✏️ Loaded ${dateFormatted.split(' ')[0]} — add/edit & update`;
+      banner.classList.add('show');
+      saveBtn.innerText = 'Update Entry →';
+      saveBtn.classList.add('update-mode');
+    } else {
+      activeEditRowId = null;
+      document.getElementById('m_val').value = '';
+      document.getElementById('l_val').value = '';
+      document.getElementById('s_val').value = '';
+      document.getElementById('d_val').value = '';
+      resetOthersContainer('othersContainer', []);
+
+      banner.classList.remove('show');
+      saveBtn.innerText = 'Save Entry →';
+      saveBtn.classList.remove('update-mode');
+    }
+    calcPreview();
+  }
+
   async function fetchData() {
     try {
       const res = await fetch(API_URL);
       rawData = await res.json();
+      loadEntryForSelectedDate();
       renderTable();
     } catch (err) {
       showToast('Failed to sync cloud data', 'error');
@@ -632,10 +737,10 @@
     if (!isoDate) return showToast('Please select a date', 'error');
 
     const dateFormatted = formatDateWithDay(isoDate);
-    const m = document.getElementById('m_val').value.trim();
-    const l = document.getElementById('l_val').value.trim();
-    const s = document.getElementById('s_val').value.trim();
-    const d = document.getElementById('d_val').value.trim();
+    const m = cleanItemText(document.getElementById('m_val').value);
+    const l = cleanItemText(document.getElementById('l_val').value);
+    const s = cleanItemText(document.getElementById('s_val').value);
+    const d = cleanItemText(document.getElementById('d_val').value);
     const otherData = getDynamicOthers('othersContainer');
 
     const total = extractAmount(m) + extractAmount(l) + extractAmount(s) + extractAmount(d) + otherData.total;
@@ -643,35 +748,35 @@
       return showToast('Enter at least one expense item', 'error');
     }
 
-    btn.innerText = 'Saving...';
+    // Check if an entry already exists for this date to prevent duplicates
+    const existingRecord = rawData.find(r => r.date === dateFormatted);
+    const targetRowId = activeEditRowId || (existingRecord ? existingRecord.rowId : null);
+
+    btn.innerText = targetRowId ? 'Updating...' : 'Saving...';
     btn.disabled = true;
 
     const entry = { date: dateFormatted, morning: m, noon: l, afternoon: s, night: d, other: otherData.text, total: total };
+    const payload = targetRowId
+      ? { action: 'update', rowId: targetRowId, entry: entry }
+      : { action: 'save', entry: entry };
 
     try {
       const res = await fetch(API_URL, {
         method: 'POST',
-        body: JSON.stringify({ action: 'save', entry: entry })
+        body: JSON.stringify(payload)
       });
       const result = await res.json();
       if (result.status === 'success') {
-        document.getElementById('m_val').value = '';
-        document.getElementById('l_val').value = '';
-        document.getElementById('s_val').value = '';
-        document.getElementById('d_val').value = '';
-        document.getElementById('othersContainer').innerHTML = '<div class="other-row"><input type="text" class="other-item smart-input" placeholder="e.g. 20 (Bus Fare)"></div>';
-        attachSmartListener(document.querySelector('.other-item'));
-        document.getElementById('liveTotal').innerText = '₹0';
-        showToast('Entry saved to cloud!');
-        fetchData();
+        showToast(targetRowId ? 'Day entry updated!' : 'Entry saved to cloud!');
+        await fetchData();
       } else {
         throw new Error(result.message);
       }
     } catch (err) {
       showToast('Save failed: ' + err.message, 'error');
     } finally {
-      btn.innerText = 'Save Entry →';
       btn.disabled = false;
+      loadEntryForSelectedDate();
     }
   }
 
@@ -707,10 +812,10 @@
 
     const rowId = parseInt(document.getElementById('editRowId').value);
     const date = document.getElementById('editDate').value;
-    const m = document.getElementById('editM').value.trim();
-    const l = document.getElementById('editL').value.trim();
-    const s = document.getElementById('editS').value.trim();
-    const d = document.getElementById('editD').value.trim();
+    const m = cleanItemText(document.getElementById('editM').value);
+    const l = cleanItemText(document.getElementById('editL').value);
+    const s = cleanItemText(document.getElementById('editS').value);
+    const d = cleanItemText(document.getElementById('editD').value);
     const otherData = getDynamicOthers('editOthersContainer');
 
     const total = extractAmount(m) + extractAmount(l) + extractAmount(s) + extractAmount(d) + otherData.total;
