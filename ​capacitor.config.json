@@ -1,0 +1,9 @@
+{
+  "appId": "com.ayan.campusexpense",
+  "appName": "Campus Expense",
+  "webDir": "www",
+  "server": {
+    "url": "https://ghostbyteprotocol.github.io/Campus-Expense-Tracker/",
+    "cleartext": true
+  }
+}
