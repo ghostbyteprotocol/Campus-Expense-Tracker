@@ -1,9 +1,12 @@
-name: Build Campus Expense APK
+name: Build & Release Campus Expense APK
 
 on:
   workflow_dispatch:
   push:
     branches: [ main ]
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -23,10 +26,15 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Build Web & Android Project
+      - name: Prepare Custom Icon & Build Project
         run: |
           npm install --no-audit --no-fund
+          npm install -D @capacitor/assets --no-audit --no-fund
           npm run build
+          mkdir -p assets
+          cp icon.png assets/icon-only.png
+          cp icon.png assets/icon-foreground.png
+          cp icon.png assets/splash.png
           rm -f capacitor.config.json capacitor.config.ts
           cat << 'EOF' > capacitor.config.json
           {
@@ -40,6 +48,7 @@ jobs:
           }
           EOF
           npx cap add android
+          npx capacitor-assets generate --android --iconBackgroundColor '#09070e' --splashBackgroundColor '#09070e'
           npx cap sync android
 
       - name: Build Debug APK
@@ -47,9 +56,14 @@ jobs:
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
+          mv app/build/outputs/apk/debug/app-debug.apk ../Campus-Expense-Tracker.apk
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
         with:
-          name: Campus-Expense-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          tag_name: v1.0.${{ github.run_number }}
+          name: Campus Expense Tracker v1.0.${{ github.run_number }}
+          body: "Updated with custom app icon."
+          files: Campus-Expense-Tracker.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
