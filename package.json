@@ -1,9 +1,8 @@
 {
   "name": "campus-expense-tracker",
   "version": "1.0.0",
-  "description": "Campus & Hostel Expense Tracker",
   "scripts": {
-    "build": "mkdir -p www && cp index.html www/"
+    "build": "mkdir -p www && cp index.html www/index.html"
   },
   "dependencies": {
     "@capacitor/android": "^6.0.0",
