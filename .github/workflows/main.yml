@@ -27,6 +27,18 @@ jobs:
         run: |
           npm install --no-audit --no-fund
           npm run build
+          rm -f capacitor.config.json capacitor.config.ts
+          cat << 'EOF' > capacitor.config.json
+          {
+            "appId": "com.ayan.campusexpense",
+            "appName": "Campus Expense",
+            "webDir": "www",
+            "server": {
+              "url": "https://ghostbyteprotocol.github.io/Campus-Expense-Tracker/",
+              "cleartext": true
+            }
+          }
+          EOF
           npx cap add android
           npx cap sync android
 
