@@ -232,27 +232,20 @@
     }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* Safety Hub Buttons */
-    .safety-btn {
+    /* Alert Buttons */
+    .alert-btn {
       width: 100%; padding: 14px; border-radius: 15px; border: none;
       font-size: 14px; font-weight: 800; cursor: pointer;
       display: flex; align-items: center; justify-content: center; gap: 8px;
       transition: transform 0.1s;
     }
-    .safety-btn:active { transform: scale(0.98); }
+    .alert-btn:active { transform: scale(0.98); }
     .btn-ring {
-      background: linear-gradient(135deg, #ef4444, #dc2626);
-      color: #fff; box-shadow: 0 4px 18px rgba(239, 68, 68, 0.35);
+      background: linear-gradient(135deg, #f59e0b, #ef4444);
+      color: #fff; box-shadow: 0 4px 18px rgba(245, 158, 11, 0.3);
+      margin-bottom: 10px;
     }
-    .btn-lock {
-      background: linear-gradient(135deg, #f59e0b, #d97706);
-      color: #09070e; box-shadow: 0 4px 18px rgba(245, 158, 11, 0.25);
-    }
-    .btn-locate {
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: #fff; box-shadow: 0 4px 18px rgba(16, 185, 129, 0.28);
-    }
-    .btn-reset-cmd {
+    .btn-clear-msg {
       background: rgba(255, 255, 255, 0.06);
       color: var(--muted); border: 1px solid var(--border);
     }
@@ -595,51 +588,35 @@
     </div>
   </div>
 
-  <!-- TAB 4: BABA'S PHONE SAFETY HUB -->
-  <div id="tab-safety" class="tab-view">
+  <!-- TAB 4: RING & MESSAGE ALERT -->
+  <div id="tab-alert" class="tab-view">
     <div class="card">
       <div class="card-title">
-        <span>🚨 Emergency Ring & Alert</span>
-        <span style="font-size:11px; color:var(--rose); font-weight:700;">Overrides Silent Mode</span>
+        <span>🔔 Ring & Message Baba</span>
+        <span style="font-size:11px; color:var(--primary); font-weight:700;">Custom Ringtone</span>
       </div>
 
       <div class="presets">
-        <button type="button" class="preset-chip" onclick="setQuickAlertMsg('টাকা ফুরিয়ে গেছে, জরুরি দরকার!')">💸 টাকা ফুরিয়ে গেছে</button>
-        <button type="button" class="preset-chip" onclick="setQuickAlertMsg('জরুরি কথা আছে, এখনই ফোন ধরো!')">📞 জরুরি কল করো</button>
-        <button type="button" class="preset-chip" onclick="setQuickAlertMsg('ফোন হারিয়ে গেছে! পেলে এই নম্বরে কল করুন।')">🔍 ফোন হারিয়েছে</button>
+        <button type="button" class="preset-chip" onclick="setQuickMsg('টাকা ফুরিয়ে গেছে, একটু দরকার ছিল!')">💸 টাকা ফুরিয়ে গেছে</button>
+        <button type="button" class="preset-chip" onclick="setQuickMsg('একটু জরুরি কথা আছে, ফ্রি হলে কল করো।')">📞 ফ্রি হলে কল করো</button>
+        <button type="button" class="preset-chip" onclick="setQuickMsg('আমি ঠিকঠাক মেসে পৌঁছে গেছি।')">🏠 মেসে পৌঁছে গেছি</button>
       </div>
 
       <div class="field">
-        <label>Custom Alert Message (Displays Full-Screen on Baba's Phone)</label>
-        <textarea id="safetyAlertMsg" rows="3" placeholder="Write your emergency message here..."></textarea>
+        <label>Write Message (Rings Custom Alert + Shows Banner on Baba's App)</label>
+        <textarea id="customAlertMsg" rows="3" placeholder="যেমন: টাকা ফুরিয়ে গেছে, একটু পাঠিয়ে দিও..."></textarea>
       </div>
 
-      <button class="safety-btn btn-ring" id="ringBtn" onclick="sendSafetyCommand('RING')">
-        🚨 Loud Ring + Send Message
-      </button>
-    </div>
-
-    <div class="card">
-      <div class="card-title">
-        <span>🛡️ Remote Device Controls</span>
-        <span style="font-size:11px; color:var(--muted);">~15s Response</span>
-      </div>
-
-      <div class="grid-2" style="margin-bottom:10px;">
-        <button class="safety-btn btn-lock" id="lockBtn" onclick="confirmAndLock()">
-          🔒 Lock Screen
-        </button>
-        <button class="safety-btn btn-locate" id="locateBtn" onclick="sendSafetyCommand('LOCATE')">
-          📍 Get Location
-        </button>
-      </div>
-
-      <button class="safety-btn btn-reset-cmd" id="resetCmdBtn" onclick="sendSafetyCommand('IDLE')">
-        ⏹️ Clear / Reset Active Command
+      <button class="alert-btn btn-ring" id="sendRingBtn" onclick="sendRingAlert('RING')">
+        🔔 Ring + Send Message
       </button>
 
-      <div class="status-pill" id="safetyStatusBox">
-        <span style="color:var(--muted);">Status:</span> Ready. Tap <b>Get Location</b> to fetch Baba's live GPS & battery level.
+      <button class="alert-btn btn-clear-msg" id="clearRingBtn" onclick="sendRingAlert('IDLE')">
+        🧹 Clear Banner from Baba's App
+      </button>
+
+      <div class="status-pill" id="alertStatusBox">
+        <span style="color:var(--muted);">Status:</span> Ready to send alert.
       </div>
     </div>
   </div>
@@ -659,9 +636,9 @@
     <span class="ic">📒</span>
     <span>Ledger</span>
   </button>
-  <button class="nav-tab" onclick="switchTab('safety', this)">
-    <span class="ic">🛡️</span>
-    <span>Safety</span>
+  <button class="nav-tab" onclick="switchTab('alert', this)">
+    <span class="ic">🔔</span>
+    <span>Alert</span>
   </button>
 </nav>
 
@@ -819,16 +796,15 @@
     btn.innerText = isBlurred ? '🙈' : '👁️';
   }
 
-  /* ================= EXPENSE TRACKER & SAFETY LOGIC ================= */
+  /* ================= EXPENSE TRACKER & ALERT LOGIC ================= */
   let rawData = [];
-  let sysCmdRow = null;
+  let alertRow = null;
   let currentActiveRows = [];
   let activeEditRowId = null;
   let weekOffset = 0;
   let lastSyncedDateStr = "";
   let catChartInstance = null;
   let trendChartInstance = null;
-  let locationPollTimer = null;
   const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
   function switchTab(tabName, el) {
@@ -837,43 +813,39 @@
     document.getElementById(`tab-${tabName}`).classList.add('active');
     el.classList.add('active');
     if (tabName === 'analytics') renderCharts();
-    if (tabName === 'safety') updateSafetyStatusUI();
+    if (tabName === 'alert') updateAlertStatusUI();
   }
 
-  function setQuickAlertMsg(text) {
-    document.getElementById('safetyAlertMsg').value = text;
+  function setQuickMsg(text) {
+    document.getElementById('customAlertMsg').value = text;
   }
 
-  function confirmAndLock() {
-    if (confirm("Lock Baba's phone screen right now?")) {
-      sendSafetyCommand('LOCK');
-    }
-  }
+  async function sendRingAlert(mode) {
+    const btn = document.getElementById('sendRingBtn');
+    const statusBox = document.getElementById('alertStatusBox');
+    let msg = document.getElementById('customAlertMsg').value.trim();
 
-  async function sendSafetyCommand(cmdType) {
-    const msg = document.getElementById('safetyAlertMsg').value.trim();
-    const cmdId = String(Date.now());
-    const statusBox = document.getElementById('safetyStatusBox');
-
-    if (cmdType === 'RING' && !msg) {
-      document.getElementById('safetyAlertMsg').value = "জরুরি দরকার! এখনই ফোনটা দেখো।";
+    if (mode === 'RING' && !msg) {
+      msg = "টাকা ফুরিয়ে গেছে, একটু দরকার ছিল!";
+      document.getElementById('customAlertMsg').value = msg;
     }
 
-    const finalMsg = document.getElementById('safetyAlertMsg').value.trim() || "Emergency Alert";
-    statusBox.innerHTML = `⏳ Sending <b>${cmdType}</b> command to Baba's phone...`;
+    btn.disabled = true;
+    statusBox.innerHTML = mode === 'RING' ? `⏳ Sending ring & message...` : `⏳ Clearing banner...`;
 
+    const nowTime = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
     const entry = {
-      date: "__SYS_CMD__",
-      morning: cmdType,
-      noon: cmdType === 'LOCATE' ? 'Waiting for GPS...' : finalMsg,
-      afternoon: cmdId,
-      night: "",
+      date: "31/12/2099 (Alert)",
+      morning: mode,
+      noon: mode === 'RING' ? msg : "",
+      afternoon: String(Date.now()),
+      night: mode === 'RING' ? nowTime : "",
       other: "",
       total: 0
     };
 
-    const payload = sysCmdRow
-      ? { action: 'update', rowId: sysCmdRow.rowId, entry: entry }
+    const payload = alertRow
+      ? { action: 'update', rowId: alertRow.rowId, entry: entry }
       : { action: 'save', entry: entry };
 
     try {
@@ -883,67 +855,25 @@
       });
       const result = await res.json();
       if (result.status === 'success') {
-        showToast(`${cmdType} command sent!`);
+        showToast(mode === 'RING' ? 'Ring & Message Sent!' : 'Banner Cleared!');
         await fetchData();
-
-        if (cmdType === 'LOCATE') {
-          statusBox.innerHTML = `📡 Waiting for Baba's phone to reply with GPS (takes ~15-20s)...`;
-          startLocationPolling(cmdId);
-        } else if (cmdType === 'RING') {
-          statusBox.innerHTML = `🚨 <b>Loud Ring Sent!</b> Baba's phone will ring within 15 seconds with message: <i>"${finalMsg}"</i>`;
-        } else if (cmdType === 'LOCK') {
-          statusBox.innerHTML = `🔒 <b>Screen Lock Sent!</b> Baba's phone will lock within 15 seconds.`;
-        } else {
-          statusBox.innerHTML = `✅ Command reset to IDLE.`;
-        }
       } else {
         throw new Error(result.message);
       }
     } catch (err) {
       statusBox.innerHTML = `❌ Failed: ${err.message}`;
-      showToast('Command failed', 'error');
+      showToast('Failed to send', 'error');
+    } finally {
+      btn.disabled = false;
     }
   }
 
-  function startLocationPolling(targetCmdId) {
-    if (locationPollTimer) clearInterval(locationPollTimer);
-    let attempts = 0;
-    locationPollTimer = setInterval(async () => {
-      attempts++;
-      await fetchData();
-      if (sysCmdRow && sysCmdRow.morning === 'LOCATED' && sysCmdRow.afternoon === targetCmdId) {
-        clearInterval(locationPollTimer);
-        updateSafetyStatusUI();
-        showToast("Live Location Received!");
-      } else if (attempts >= 8) {
-        clearInterval(locationPollTimer);
-        document.getElementById('safetyStatusBox').innerHTML = `⚠️ No reply yet. Baba's phone may be offline or GPS off. Tap <b>Get Location</b> to retry.`;
-      }
-    }, 5000);
-  }
-
-  function updateSafetyStatusUI() {
-    const statusBox = document.getElementById('safetyStatusBox');
-    if (!sysCmdRow) return;
-
-    if (sysCmdRow.morning === 'LOCATED') {
-      const coords = sysCmdRow.noon || '';
-      const battery = sysCmdRow.night || 'Unknown';
-      if (coords.includes(',')) {
-        const mapUrl = `https://www.google.com/maps?q=${coords}`;
-        statusBox.innerHTML = `
-          <div style="color:var(--emerald); font-weight:700; margin-bottom:6px;">📍 Live Location Found!</div>
-          <div>🔋 Battery: <b>${battery}</b></div>
-          <div style="margin-bottom:10px;">🌐 Coords: <code>${coords}</code></div>
-          <a href="${mapUrl}" target="_blank" style="display:block; text-align:center; background:var(--emerald); color:#09070e; font-weight:800; padding:10px; border-radius:10px; text-decoration:none;">
-            🗺️ Open in Google Maps
-          </a>
-        `;
-      } else {
-        statusBox.innerHTML = `⚠️ Location Status: <b>${coords}</b> | 🔋 Battery: <b>${battery}</b>`;
-      }
-    } else if (sysCmdRow.morning && sysCmdRow.morning !== 'IDLE') {
-      statusBox.innerHTML = `⚡ Last Command: <b>${sysCmdRow.morning}</b> — "${sysCmdRow.noon}"`;
+  function updateAlertStatusUI() {
+    const statusBox = document.getElementById('alertStatusBox');
+    if (alertRow && alertRow.morning === 'RING' && alertRow.noon && alertRow.noon !== '-') {
+      statusBox.innerHTML = `🔔 <b>Active Message on Baba's App:</b><br>"${alertRow.noon}" <span style="color:var(--muted);">(${alertRow.night || ''})</span>`;
+    } else {
+      statusBox.innerHTML = `<span style="color:var(--muted);">Status:</span> No active banner on Baba's app.`;
     }
   }
 
@@ -1147,11 +1077,11 @@
     try {
       const res = await fetch(API_URL);
       const allRows = await res.json();
-      sysCmdRow = allRows.find(r => r.date === "__SYS_CMD__") || null;
-      rawData = allRows.filter(r => r.date !== "__SYS_CMD__");
+      alertRow = allRows.find(r => String(r.date || '').includes("2099")) || null;
+      rawData = allRows.filter(r => !String(r.date || '').includes("2099") && r.date !== "__SYS_CMD__");
       loadEntryForSelectedDate();
       renderTable();
-      updateSafetyStatusUI();
+      updateAlertStatusUI();
     } catch (err) {
       showToast('Failed to sync cloud data', 'error');
     }
