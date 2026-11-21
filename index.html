@@ -197,13 +197,13 @@
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .field { margin-bottom: 11px; }
     label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 5px; }
-    input {
+    input, textarea {
       width: 100%; padding: 12px 13px; border-radius: 13px;
       border: 1px solid var(--border); background: var(--surface-2);
       color: var(--text); font-size: 14px; outline: none; transition: 0.2s;
     }
-    input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18); }
-    input::placeholder { color: #675e7d; }
+    input:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18); }
+    input::placeholder, textarea::placeholder { color: #675e7d; }
 
     .other-row { display: flex; gap: 8px; margin-bottom: 8px; }
     .btn-ghost {
@@ -231,6 +231,36 @@
       box-shadow: 0 4px 18px rgba(168, 85, 247, 0.35);
     }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Safety Hub Buttons */
+    .safety-btn {
+      width: 100%; padding: 14px; border-radius: 15px; border: none;
+      font-size: 14px; font-weight: 800; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: transform 0.1s;
+    }
+    .safety-btn:active { transform: scale(0.98); }
+    .btn-ring {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: #fff; box-shadow: 0 4px 18px rgba(239, 68, 68, 0.35);
+    }
+    .btn-lock {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #09070e; box-shadow: 0 4px 18px rgba(245, 158, 11, 0.25);
+    }
+    .btn-locate {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff; box-shadow: 0 4px 18px rgba(16, 185, 129, 0.28);
+    }
+    .btn-reset-cmd {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--muted); border: 1px solid var(--border);
+    }
+    .status-pill {
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 14px; padding: 12px 14px; font-size: 12px;
+      margin-top: 12px; line-height: 1.5;
+    }
 
     .budget-bar-bg { height: 11px; background: var(--surface-2); border-radius: 99px; overflow: hidden; margin: 10px 0; }
     .budget-bar-fill { height: 100%; background: linear-gradient(90deg, #a855f7, #f59e0b); width: 0%; transition: 0.4s ease; border-radius: 99px; }
@@ -275,13 +305,13 @@
       border: 1px solid rgba(251, 113, 133, 0.28); padding: 9px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; cursor: pointer;
     }
 
-    /* Bottom Navigation Bar */
+    /* Bottom Navigation Bar (4 Tabs) */
     .bottom-nav {
       position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
-      width: calc(100% - 28px); max-width: 460px;
+      width: calc(100% - 28px); max-width: 480px;
       background: rgba(30, 25, 48, 0.94); backdrop-filter: blur(18px);
       border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 22px;
-      display: grid; grid-template-columns: repeat(3, 1fr); padding: 6px;
+      display: grid; grid-template-columns: repeat(4, 1fr); padding: 6px;
       box-shadow: 0 12px 35px rgba(0, 0, 0, 0.8); z-index: 100;
     }
     .nav-tab {
@@ -328,42 +358,36 @@
   </div>
 
   <div class="sci-keypad">
-    <!-- Scientific Row 1 -->
     <button class="s-btn fn" onclick="sciFunc('sin(')">sin</button>
     <button class="s-btn fn" onclick="sciFunc('cos(')">cos</button>
     <button class="s-btn fn" onclick="sciFunc('tan(')">tan</button>
     <button class="s-btn fn" onclick="sciFunc('log(')">log</button>
     <button class="s-btn fn" onclick="sciFunc('ln(')">ln</button>
 
-    <!-- Scientific Row 2 -->
     <button class="s-btn fn" onclick="sciAppend('(')">(</button>
     <button class="s-btn fn" onclick="sciAppend(')')">)</button>
     <button class="s-btn fn" onclick="sciAppend('^')">xʸ</button>
     <button class="s-btn fn" onclick="sciFunc('√(')">√</button>
     <button class="s-btn fn" onclick="sciAppend('π')">π</button>
 
-    <!-- Number & Action Row 3 -->
     <button class="s-btn" onclick="sciAppend('7')">7</button>
     <button class="s-btn" onclick="sciAppend('8')">8</button>
     <button class="s-btn" onclick="sciAppend('9')">9</button>
     <button class="s-btn clr" onclick="sciBack()">DEL</button>
     <button class="s-btn clr" onclick="sciClear()">AC</button>
 
-    <!-- Number & Op Row 4 -->
     <button class="s-btn" onclick="sciAppend('4')">4</button>
     <button class="s-btn" onclick="sciAppend('5')">5</button>
     <button class="s-btn" onclick="sciAppend('6')">6</button>
     <button class="s-btn op" onclick="sciAppend('×')">×</button>
     <button class="s-btn op" onclick="sciAppend('÷')">÷</button>
 
-    <!-- Number & Op Row 5 -->
     <button class="s-btn" onclick="sciAppend('1')">1</button>
     <button class="s-btn" onclick="sciAppend('2')">2</button>
     <button class="s-btn" onclick="sciAppend('3')">3</button>
     <button class="s-btn op" onclick="sciAppend('+')">+</button>
     <button class="s-btn op" onclick="sciAppend('−')">−</button>
 
-    <!-- Bottom Row 6 -->
     <button class="s-btn" onclick="sciAppend('0')">0</button>
     <button class="s-btn" onclick="sciAppend('00')">00</button>
     <button class="s-btn" onclick="sciAppend('.')">.</button>
@@ -424,13 +448,11 @@
         <span style="font-size:11px; color:var(--primary); font-weight:500;">Number + Space = ( )</span>
       </div>
 
-      <!-- Existing Date Sync Indicator -->
       <div id="existingSyncBanner" class="sync-banner">
         <span id="syncBannerText">✏️ Existing entry loaded — add or edit items</span>
         <span style="font-size:10px; opacity:0.85;">No Duplicate</span>
       </div>
 
-      <!-- One-Tap Quick Presets -->
       <div class="presets">
         <button type="button" class="preset-chip" onclick="quickFill('m_val', '20 (Breakfast)')">+ ₹20 Breakfast</button>
         <button type="button" class="preset-chip" onclick="quickFill('l_val', '60 (Canteen Lunch)')">+ ₹60 Lunch</button>
@@ -572,6 +594,55 @@
       </div>
     </div>
   </div>
+
+  <!-- TAB 4: BABA'S PHONE SAFETY HUB -->
+  <div id="tab-safety" class="tab-view">
+    <div class="card">
+      <div class="card-title">
+        <span>🚨 Emergency Ring & Alert</span>
+        <span style="font-size:11px; color:var(--rose); font-weight:700;">Overrides Silent Mode</span>
+      </div>
+
+      <div class="presets">
+        <button type="button" class="preset-chip" onclick="setQuickAlertMsg('টাকা ফুরিয়ে গেছে, জরুরি দরকার!')">💸 টাকা ফুরিয়ে গেছে</button>
+        <button type="button" class="preset-chip" onclick="setQuickAlertMsg('জরুরি কথা আছে, এখনই ফোন ধরো!')">📞 জরুরি কল করো</button>
+        <button type="button" class="preset-chip" onclick="setQuickAlertMsg('ফোন হারিয়ে গেছে! পেলে এই নম্বরে কল করুন।')">🔍 ফোন হারিয়েছে</button>
+      </div>
+
+      <div class="field">
+        <label>Custom Alert Message (Displays Full-Screen on Baba's Phone)</label>
+        <textarea id="safetyAlertMsg" rows="3" placeholder="Write your emergency message here..."></textarea>
+      </div>
+
+      <button class="safety-btn btn-ring" id="ringBtn" onclick="sendSafetyCommand('RING')">
+        🚨 Loud Ring + Send Message
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span>🛡️ Remote Device Controls</span>
+        <span style="font-size:11px; color:var(--muted);">~15s Response</span>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:10px;">
+        <button class="safety-btn btn-lock" id="lockBtn" onclick="confirmAndLock()">
+          🔒 Lock Screen
+        </button>
+        <button class="safety-btn btn-locate" id="locateBtn" onclick="sendSafetyCommand('LOCATE')">
+          📍 Get Location
+        </button>
+      </div>
+
+      <button class="safety-btn btn-reset-cmd" id="resetCmdBtn" onclick="sendSafetyCommand('IDLE')">
+        ⏹️ Clear / Reset Active Command
+      </button>
+
+      <div class="status-pill" id="safetyStatusBox">
+        <span style="color:var(--muted);">Status:</span> Ready. Tap <b>Get Location</b> to fetch Baba's live GPS & battery level.
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Bottom Navigation Bar -->
@@ -587,6 +658,10 @@
   <button class="nav-tab" onclick="switchTab('ledger', this)">
     <span class="ic">📒</span>
     <span>Ledger</span>
+  </button>
+  <button class="nav-tab" onclick="switchTab('safety', this)">
+    <span class="ic">🛡️</span>
+    <span>Safety</span>
   </button>
 </nav>
 
@@ -744,14 +819,16 @@
     btn.innerText = isBlurred ? '🙈' : '👁️';
   }
 
-  /* ================= EXPENSE TRACKER LOGIC ================= */
+  /* ================= EXPENSE TRACKER & SAFETY LOGIC ================= */
   let rawData = [];
+  let sysCmdRow = null;
   let currentActiveRows = [];
   let activeEditRowId = null;
   let weekOffset = 0;
   let lastSyncedDateStr = "";
   let catChartInstance = null;
   let trendChartInstance = null;
+  let locationPollTimer = null;
   const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
   function switchTab(tabName, el) {
@@ -760,6 +837,114 @@
     document.getElementById(`tab-${tabName}`).classList.add('active');
     el.classList.add('active');
     if (tabName === 'analytics') renderCharts();
+    if (tabName === 'safety') updateSafetyStatusUI();
+  }
+
+  function setQuickAlertMsg(text) {
+    document.getElementById('safetyAlertMsg').value = text;
+  }
+
+  function confirmAndLock() {
+    if (confirm("Lock Baba's phone screen right now?")) {
+      sendSafetyCommand('LOCK');
+    }
+  }
+
+  async function sendSafetyCommand(cmdType) {
+    const msg = document.getElementById('safetyAlertMsg').value.trim();
+    const cmdId = String(Date.now());
+    const statusBox = document.getElementById('safetyStatusBox');
+
+    if (cmdType === 'RING' && !msg) {
+      document.getElementById('safetyAlertMsg').value = "জরুরি দরকার! এখনই ফোনটা দেখো।";
+    }
+
+    const finalMsg = document.getElementById('safetyAlertMsg').value.trim() || "Emergency Alert";
+    statusBox.innerHTML = `⏳ Sending <b>${cmdType}</b> command to Baba's phone...`;
+
+    const entry = {
+      date: "__SYS_CMD__",
+      morning: cmdType,
+      noon: cmdType === 'LOCATE' ? 'Waiting for GPS...' : finalMsg,
+      afternoon: cmdId,
+      night: "",
+      other: "",
+      total: 0
+    };
+
+    const payload = sysCmdRow
+      ? { action: 'update', rowId: sysCmdRow.rowId, entry: entry }
+      : { action: 'save', entry: entry };
+
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      const result = await res.json();
+      if (result.status === 'success') {
+        showToast(`${cmdType} command sent!`);
+        await fetchData();
+
+        if (cmdType === 'LOCATE') {
+          statusBox.innerHTML = `📡 Waiting for Baba's phone to reply with GPS (takes ~15-20s)...`;
+          startLocationPolling(cmdId);
+        } else if (cmdType === 'RING') {
+          statusBox.innerHTML = `🚨 <b>Loud Ring Sent!</b> Baba's phone will ring within 15 seconds with message: <i>"${finalMsg}"</i>`;
+        } else if (cmdType === 'LOCK') {
+          statusBox.innerHTML = `🔒 <b>Screen Lock Sent!</b> Baba's phone will lock within 15 seconds.`;
+        } else {
+          statusBox.innerHTML = `✅ Command reset to IDLE.`;
+        }
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (err) {
+      statusBox.innerHTML = `❌ Failed: ${err.message}`;
+      showToast('Command failed', 'error');
+    }
+  }
+
+  function startLocationPolling(targetCmdId) {
+    if (locationPollTimer) clearInterval(locationPollTimer);
+    let attempts = 0;
+    locationPollTimer = setInterval(async () => {
+      attempts++;
+      await fetchData();
+      if (sysCmdRow && sysCmdRow.morning === 'LOCATED' && sysCmdRow.afternoon === targetCmdId) {
+        clearInterval(locationPollTimer);
+        updateSafetyStatusUI();
+        showToast("Live Location Received!");
+      } else if (attempts >= 8) {
+        clearInterval(locationPollTimer);
+        document.getElementById('safetyStatusBox').innerHTML = `⚠️ No reply yet. Baba's phone may be offline or GPS off. Tap <b>Get Location</b> to retry.`;
+      }
+    }, 5000);
+  }
+
+  function updateSafetyStatusUI() {
+    const statusBox = document.getElementById('safetyStatusBox');
+    if (!sysCmdRow) return;
+
+    if (sysCmdRow.morning === 'LOCATED') {
+      const coords = sysCmdRow.noon || '';
+      const battery = sysCmdRow.night || 'Unknown';
+      if (coords.includes(',')) {
+        const mapUrl = `https://www.google.com/maps?q=${coords}`;
+        statusBox.innerHTML = `
+          <div style="color:var(--emerald); font-weight:700; margin-bottom:6px;">📍 Live Location Found!</div>
+          <div>🔋 Battery: <b>${battery}</b></div>
+          <div style="margin-bottom:10px;">🌐 Coords: <code>${coords}</code></div>
+          <a href="${mapUrl}" target="_blank" style="display:block; text-align:center; background:var(--emerald); color:#09070e; font-weight:800; padding:10px; border-radius:10px; text-decoration:none;">
+            🗺️ Open in Google Maps
+          </a>
+        `;
+      } else {
+        statusBox.innerHTML = `⚠️ Location Status: <b>${coords}</b> | 🔋 Battery: <b>${battery}</b>`;
+      }
+    } else if (sysCmdRow.morning && sysCmdRow.morning !== 'IDLE') {
+      statusBox.innerHTML = `⚡ Last Command: <b>${sysCmdRow.morning}</b> — "${sysCmdRow.noon}"`;
+    }
   }
 
   function quickFill(inputId, text) {
@@ -961,9 +1146,12 @@
   async function fetchData() {
     try {
       const res = await fetch(API_URL);
-      rawData = await res.json();
+      const allRows = await res.json();
+      sysCmdRow = allRows.find(r => r.date === "__SYS_CMD__") || null;
+      rawData = allRows.filter(r => r.date !== "__SYS_CMD__");
       loadEntryForSelectedDate();
       renderTable();
+      updateSafetyStatusUI();
     } catch (err) {
       showToast('Failed to sync cloud data', 'error');
     }
