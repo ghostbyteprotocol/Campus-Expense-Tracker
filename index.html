@@ -1,1528 +1,1891 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Campus Expense Tracker</title>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>HisabCloud Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <script src="firebase-config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <style>
     :root {
-      --bg: #09070e;
-      --surface: #14111f;
-      --surface-2: #1e1930;
-      --border: rgba(255, 255, 255, 0.09);
-      --primary: #f59e0b;
-      --primary-glow: rgba(245, 158, 11, 0.28);
-      --violet: #a855f7;
-      --emerald: #10b981;
-      --rose: #fb7185;
-      --text: #faf8ff;
-      --muted: #9e96b3;
+      --bg: #090812;
+      --surface: #131122;
+      --surface-2: #1b1830;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #8b5cf6;
+      --primary-2: #6366f1;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
     }
-
-    * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
+      font-family: 'Plus Jakarta Sans', 'Hind Siliguri', sans-serif;
       background: var(--bg);
-      background-image:
-        radial-gradient(circle at 15% 0%, rgba(168, 85, 247, 0.16), transparent 42%),
-        radial-gradient(circle at 85% 5%, rgba(245, 158, 11, 0.12), transparent 42%);
       color: var(--text);
-      padding: 14px 14px 92px;
       min-height: 100vh;
-    }
-    .container { max-width: 820px; margin: 0 auto; }
-
-    /* ================= AESTHETIC SCIENTIFIC CALCULATOR LOCK ================= */
-    #sciCalcScreen {
-      position: fixed; inset: 0; z-index: 99999;
-      background: radial-gradient(circle at 50% 0%, #171226 0%, #07050c 65%);
-      display: flex; flex-direction: column; justify-content: space-between;
-      padding: 18px 16px 24px;
-    }
-    #sciCalcScreen.unlocked { display: none; }
-
-    .sci-topbar {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 4px 4px;
-    }
-    .sci-title {
-      font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 700;
-      letter-spacing: 0.8px; color: #8c82a6; text-transform: uppercase;
-      display: flex; align-items: center; gap: 7px;
-    }
-    .sci-badge {
-      background: rgba(168, 85, 247, 0.16); color: #c084fc;
-      border: 1px solid rgba(168, 85, 247, 0.3);
-      font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
-      padding: 4px 10px; border-radius: 99px; cursor: pointer;
+      overflow-x: hidden;
     }
 
-    .sci-display-card {
-      background: rgba(20, 16, 34, 0.75);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 24px; padding: 18px 18px 20px;
-      margin: auto 0 16px;
-      box-shadow: inset 0 2px 18px rgba(0, 0, 0, 0.5);
+    /* ================= CALCULATOR LOCK SCREEN ================= */
+    #calcLockScreen {
+      position: fixed;
+      inset: 0;
+      background: #07060d;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 18px 16px 26px;
+    }
+    .calc-brand {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      font-size: 13px;
+      color: #64748b;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .calc-display-box {
+      background: #100e1c;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 22px;
+      padding: 18px 20px;
+      margin-bottom: 14px;
       text-align: right;
     }
-    .sci-expr {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 14px; color: #8c82a6; min-height: 22px;
-      margin-bottom: 8px; overflow-x: auto; white-space: nowrap;
+    .calc-expr {
+      font-size: 15px;
+      color: #94a3b8;
+      min-height: 22px;
+      word-break: break-all;
     }
-    .sci-main-val {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 40px; font-weight: 700; color: #faf8ff;
-      line-height: 1.15; overflow-x: auto; white-space: nowrap;
-    }
-
-    .sci-keypad {
-      display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;
-      max-width: 460px; width: 100%; margin: 0 auto;
-    }
-    .s-btn {
-      height: 54px; border-radius: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      background: #141022; color: #f4f1ff;
-      font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 600;
-      cursor: pointer; transition: transform 0.08s, background 0.15s;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .s-btn:active { transform: scale(0.93); background: #231c3b; }
-    .s-btn.fn {
-      height: 44px; font-size: 13px; font-weight: 600;
-      background: rgba(168, 85, 247, 0.11); color: #d8b4fe;
-      border-color: rgba(168, 85, 247, 0.22);
-    }
-    .s-btn.op {
-      background: #1c1630; color: #fbbf24;
-      border-color: rgba(245, 158, 11, 0.18);
-    }
-    .s-btn.clr {
-      background: rgba(251, 113, 133, 0.14); color: #fb7185;
-      border-color: rgba(251, 113, 133, 0.25); font-size: 15px;
-    }
-    .s-btn.eq {
-      background: linear-gradient(135deg, #f59e0b, #a855f7);
-      color: #09070e; font-weight: 800; font-size: 22px; border: none;
-      box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
-    }
-
-    /* ================= STEALTH EYE BLUR MODE ================= */
-    body.stealth-blur .blur-sensitive {
-      filter: blur(8px);
-      user-select: none;
-      pointer-events: none;
-      transition: filter 0.2s ease;
-    }
-
-    /* Top App Bar */
-    .topbar {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 12px 14px; background: rgba(20, 17, 31, 0.9);
-      backdrop-filter: blur(14px); border: 1px solid var(--border);
-      border-radius: 20px; margin-bottom: 16px; position: sticky; top: 10px; z-index: 50;
-    }
-    .brand { display: flex; align-items: center; gap: 10px; }
-    .logo-box {
-      width: 38px; height: 38px; border-radius: 12px;
-      background: linear-gradient(135deg, #f59e0b, #a855f7);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px; color: #09070e; font-weight: 800;
-      box-shadow: 0 4px 16px var(--primary-glow);
-    }
-    .app-name { font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: -0.2px; }
-    .app-sub { font-size: 10px; color: var(--muted); }
-    .top-actions { display: flex; align-items: center; gap: 7px; }
-    .icon-pill {
-      background: rgba(255, 255, 255, 0.06); border: 1px solid var(--border);
-      color: var(--text); width: 34px; height: 34px; border-radius: 11px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 15px; cursor: pointer;
-    }
-    .icon-pill.active-eye { background: rgba(251, 113, 133, 0.2); border-color: rgba(251, 113, 133, 0.45); color: var(--rose); }
-
-    /* Tab Sections */
-    .tab-view { display: none; animation: fadeIn 0.25s ease; }
-    .tab-view.active { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-
-    /* Hero Banner */
-    .hero {
-      background: linear-gradient(135deg, #1b152e 0%, #120e1f 100%);
-      border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 24px; padding: 20px;
-      margin-bottom: 14px; position: relative; overflow: hidden;
-    }
-    .hero-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 16px; }
-    .lbl-sm { font-size: 10px; text-transform: uppercase; letter-spacing: 0.9px; color: var(--muted); font-weight: 700; }
-    .big-num { font-family: 'Outfit', sans-serif; font-size: 34px; font-weight: 800; color: #fff; margin-top: 2px; }
-    .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .kpi-box {
-      background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border);
-      border-radius: 14px; padding: 10px;
-    }
-    .kpi-box span { display: block; font-size: 10px; color: var(--muted); font-weight: 600; }
-    .kpi-box strong { font-family: 'Outfit', sans-serif; font-size: 15px; margin-top: 3px; display: block; }
-
-    /* Cards & Forms */
-    .card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 24px; padding: 18px; margin-bottom: 14px;
-    }
-    .card-title {
-      font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700;
-      margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
-    }
-
-    .sync-banner {
-      display: none; align-items: center; justify-content: space-between;
-      background: rgba(168, 85, 247, 0.14); border: 1px solid rgba(168, 85, 247, 0.35);
-      color: #e9d5ff; padding: 8px 12px; border-radius: 12px;
-      font-size: 11px; font-weight: 600; margin-bottom: 12px;
-    }
-    .sync-banner.show { display: flex; }
-
-    .presets { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 10px; scrollbar-width: none; }
-    .presets::-webkit-scrollbar { display: none; }
-    .preset-chip {
-      background: var(--surface-2); border: 1px solid rgba(168, 85, 247, 0.25); color: var(--text);
-      padding: 7px 12px; border-radius: 99px; font-size: 11px; font-weight: 600;
-      white-space: nowrap; cursor: pointer; transition: 0.15s;
-    }
-    .preset-chip:active { background: var(--primary); color: #09070e; border-color: var(--primary); }
-
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .field { margin-bottom: 11px; }
-    label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 5px; }
-    input, textarea {
-      width: 100%; padding: 12px 13px; border-radius: 13px;
-      border: 1px solid var(--border); background: var(--surface-2);
-      color: var(--text); font-size: 14px; outline: none; transition: 0.2s;
-    }
-    input:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18); }
-    input::placeholder, textarea::placeholder { color: #675e7d; }
-
-    .other-row { display: flex; gap: 8px; margin-bottom: 8px; }
-    .btn-ghost {
-      background: rgba(255, 255, 255, 0.05); color: var(--text); border: 1px solid var(--border);
-      padding: 8px 13px; border-radius: 11px; font-size: 12px; font-weight: 600; cursor: pointer;
-    }
-    .btn-del-item {
-      background: rgba(251, 113, 133, 0.15); color: var(--rose); border: 1px solid rgba(251, 113, 133, 0.3);
-      padding: 0 13px; border-radius: 12px; font-weight: 700; cursor: pointer;
-    }
-
-    .submit-bar {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border);
-    }
-    .btn-primary {
-      background: linear-gradient(135deg, #f59e0b, #d97706); color: #09070e;
-      border: none; padding: 13px 22px; border-radius: 14px; font-size: 14px;
-      font-weight: 800; cursor: pointer; box-shadow: 0 4px 18px var(--primary-glow);
-      transition: 0.2s;
-    }
-    .btn-primary.update-mode {
-      background: linear-gradient(135deg, #a855f7, #7e22ce);
+    .calc-result {
+      font-size: 38px;
+      font-weight: 800;
       color: #fff;
-      box-shadow: 0 4px 18px rgba(168, 85, 247, 0.35);
+      margin-top: 6px;
+      overflow-x: auto;
     }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    /* Alert Buttons */
-    .alert-btn {
-      width: 100%; padding: 14px; border-radius: 15px; border: none;
-      font-size: 14px; font-weight: 800; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      transition: transform 0.1s;
-    }
-    .alert-btn:active { transform: scale(0.98); }
-    .btn-ring {
-      background: linear-gradient(135deg, #f59e0b, #ef4444);
-      color: #fff; box-shadow: 0 4px 18px rgba(245, 158, 11, 0.3);
+    .calc-sci-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
       margin-bottom: 10px;
     }
-    .btn-clear-msg {
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--muted); border: 1px solid var(--border);
+    .calc-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
     }
+    .c-btn {
+      border: none;
+      border-radius: 16px;
+      padding: 15px 0;
+      font-size: 19px;
+      font-weight: 700;
+      background: #161426;
+      color: #f8fafc;
+      cursor: pointer;
+      transition: transform 0.08s, background 0.15s;
+    }
+    .c-btn:active { transform: scale(0.95); background: #23203b; }
+    .c-sci {
+      padding: 10px 0;
+      font-size: 13px;
+      background: #110f1f;
+      color: #a78bfa;
+      border-radius: 12px;
+    }
+    .c-op { background: rgba(139, 92, 246, 0.18); color: #c4b5fd; }
+    .c-ac { background: rgba(239, 68, 68, 0.18); color: #fca5a5; }
+    .c-eq { background: linear-gradient(135deg, #8b5cf6, #6366f1); color: #fff; }
+
+    /* ================= MAIN APP SHELL ================= */
+    #appShell {
+      display: none;
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 12px 14px 92px;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 2px 14px;
+      position: sticky;
+      top: 0;
+      background: rgba(9, 8, 18, 0.92);
+      backdrop-filter: blur(10px);
+      z-index: 50;
+    }
+    .top-left { display: flex; align-items: center; gap: 10px; }
+    .app-icon {
+      width: 38px; height: 38px; border-radius: 12px;
+      background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 19px;
+    }
+    .top-left h1 { font-size: 16px; font-weight: 800; }
+    .top-left p { font-size: 11px; color: #34d399; font-weight: 600; }
+    .top-actions { display: flex; gap: 8px; align-items: center; }
+    .pill-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: #e2e8f0;
+      padding: 7px 11px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Cards & Inputs */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .card-title {
+      font-size: 14px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #f1f5f9;
+    }
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .inp-box { margin-bottom: 10px; }
+    .inp-box label {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+    .inp {
+      width: 100%;
+      background: #0c0a17;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 11px 12px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      font-family: inherit;
+    }
+    .inp:focus { border-color: var(--primary); }
+    .btn {
+      width: 100%;
+      border: none;
+      border-radius: 14px;
+      padding: 13px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      transition: opacity 0.15s;
+    }
+    .btn:active { opacity: 0.85; }
+    .btn-sm {
+      width: auto;
+      padding: 7px 12px;
+      font-size: 12px;
+      border-radius: 10px;
+    }
+    .btn-danger { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+    .btn-success { background: linear-gradient(135deg, #10b981, #059669); }
+    .btn-outline {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      color: #e2e8f0;
+    }
+
+    /* Shortcuts Bar */
+    .shortcut-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 12px;
+    }
+    .sc-chip {
+      background: rgba(139, 92, 246, 0.16);
+      border: 1px solid rgba(139, 92, 246, 0.35);
+      color: #ddd6fe;
+      padding: 6px 11px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .sc-chip:active { transform: scale(0.95); }
+
+    /* Mini Fuel Gauge */
+    .mini-fuel-bar {
+      height: 10px;
+      background: #1e1b33;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .mini-fuel-fill {
+      height: 100%;
+      background: #10b981;
+      transition: width 0.5s ease, background 0.4s ease;
+    }
+
+    /* Expense Rows */
+    .exp-row {
+      background: var(--surface-2);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .exp-info h4 { font-size: 13px; font-weight: 700; }
+    .exp-info p { font-size: 11px; color: var(--muted); margin-top: 3px; }
+    .exp-right { text-align: right; }
+    .exp-amt { font-size: 15px; font-weight: 800; color: #38bdf8; }
+
+    /* Chart Bars */
+    .chart-box {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      height: 135px;
+      gap: 8px;
+      padding-top: 16px;
+    }
+    .bar-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      justify-content: flex-end;
+    }
+    .bar-val { font-size: 10px; color: #cbd5e1; margin-bottom: 4px; }
+    .bar-fill {
+      width: 100%;
+      max-width: 28px;
+      background: linear-gradient(180deg, #a855f7, #6366f1);
+      border-radius: 8px 8px 4px 4px;
+      min-height: 4px;
+      transition: height 0.5s ease;
+    }
+    .bar-lbl { font-size: 10px; color: var(--muted); margin-top: 5px; }
+
+    /* Alert Status & History */
     .status-pill {
-      background: var(--surface-2); border: 1px solid var(--border);
-      border-radius: 14px; padding: 12px 14px; font-size: 12px;
-      margin-top: 12px; line-height: 1.5;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
     }
+    .st-sent { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+    .st-ringing { background: rgba(245, 158, 11, 0.25); color: #fcd34d; }
+    .st-seen { background: rgba(16, 185, 129, 0.22); color: #6ee7b7; }
 
-    .budget-bar-bg { height: 11px; background: var(--surface-2); border-radius: 99px; overflow: hidden; margin: 10px 0; }
-    .budget-bar-fill { height: 100%; background: linear-gradient(90deg, #a855f7, #f59e0b); width: 0%; transition: 0.4s ease; border-radius: 99px; }
+    /* AI Chat Interface */
+    .ai-container {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 155px);
+      min-height: 440px;
+    }
+    .ai-topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 8px;
+    }
+    .ai-chat-title {
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 180px;
+    }
+    .ai-messages {
+      flex: 1;
+      overflow-y: auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .msg-bubble {
+      max-width: 86%;
+      padding: 11px 14px;
+      border-radius: 16px;
+      font-size: 13.5px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .msg-user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .msg-ai {
+      align-self: flex-start;
+      background: var(--surface-2);
+      color: #f1f5f9;
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+    .msg-img {
+      max-width: 180px;
+      border-radius: 10px;
+      margin-bottom: 6px;
+      display: block;
+    }
+    .ai-input-bar {
+      margin-top: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 8px;
+    }
+    .ai-preview-img {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 8px 8px;
+      font-size: 12px;
+      color: #c4b5fd;
+    }
+    .ai-controls {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .icon-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      border: none;
+      background: var(--surface-2);
+      color: #e2e8f0;
+      font-size: 16px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .icon-btn.recording { background: #ef4444; color: #fff; }
 
-    .chart-box { position: relative; height: 220px; width: 100%; margin-top: 10px; }
+    /* AI History Drawer */
+    #aiHistoryModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 200;
+      justify-content: flex-start;
+    }
+    .drawer-panel {
+      width: 82%;
+      max-width: 320px;
+      background: #110f21;
+      height: 100%;
+      padding: 18px 14px;
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+    }
+    .chat-hist-item {
+      background: var(--surface-2);
+      padding: 10px 12px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+    .chat-hist-item.active { border: 1px solid var(--primary); }
 
-    .filter-grid { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; margin-bottom: 12px; }
-    .week-nav {
-      display: flex; justify-content: space-between; align-items: center;
-      background: var(--surface-2); padding: 8px 10px; border-radius: 14px;
-      border: 1px solid var(--border); margin-bottom: 12px;
-    }
-    .nav-pill {
-      background: rgba(255, 255, 255, 0.07); color: var(--text); border: none;
-      padding: 7px 12px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer;
-    }
-    .back-pill {
-      background: rgba(168, 85, 247, 0.2); color: #d8b4fe;
-      border: 1px solid rgba(168, 85, 247, 0.4); padding: 5px 10px; border-radius: 9px;
-      font-size: 11px; font-weight: 700; cursor: pointer;
-    }
-
-    .table-wrap { overflow-x: auto; border-radius: 15px; border: 1px solid var(--border); }
-    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; }
-    th { background: var(--surface-2); color: var(--muted); font-weight: 600; padding: 11px 10px; white-space: nowrap; }
-    td { padding: 11px 10px; border-top: 1px solid var(--border); white-space: nowrap; }
-    .date-tag { background: rgba(255,255,255,0.06); padding: 4px 8px; border-radius: 7px; font-weight: 600; font-size: 11px; }
-    .amt-tag { background: rgba(245, 158, 11, 0.16); color: var(--primary); padding: 4px 8px; border-radius: 7px; font-family: 'Outfit', sans-serif; font-weight: 700; }
-    .act-btn { border: none; padding: 6px 8px; border-radius: 8px; font-size: 12px; cursor: pointer; margin-right: 3px; }
-
-    .action-row { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; flex-wrap: wrap; gap: 8px; }
-    .btn-wa {
-      background: rgba(16, 185, 129, 0.15); color: var(--emerald);
-      border: 1px solid rgba(16, 185, 129, 0.3); padding: 9px 14px; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer;
-    }
-    .btn-pdf {
-      background: rgba(245, 158, 11, 0.15); color: var(--primary);
-      border: 1px solid rgba(245, 158, 11, 0.3); padding: 9px 14px; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer;
-    }
-    .btn-del-wk {
-      background: rgba(251, 113, 133, 0.14); color: var(--rose);
-      border: 1px solid rgba(251, 113, 133, 0.28); padding: 9px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; cursor: pointer;
-    }
-
-    /* Bottom Navigation Bar (4 Tabs) */
+    /* Bottom Navigation */
     .bottom-nav {
-      position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
-      width: calc(100% - 28px); max-width: 480px;
-      background: rgba(30, 25, 48, 0.94); backdrop-filter: blur(18px);
-      border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 22px;
-      display: grid; grid-template-columns: repeat(4, 1fr); padding: 6px;
-      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.8); z-index: 100;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(13, 11, 24, 0.96);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 4px 12px;
+      z-index: 100;
     }
-    .nav-tab {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 8px 4px; border-radius: 15px; color: var(--muted);
-      font-size: 11px; font-weight: 600; cursor: pointer; transition: 0.2s; border: none; background: transparent;
+    .nav-item {
+      background: none;
+      border: none;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 4px 8px;
     }
-    .nav-tab span.ic { font-size: 17px; margin-bottom: 2px; }
-    .nav-tab.active { background: rgba(245, 158, 11, 0.18); color: var(--primary); }
+    .nav-item span:first-child { font-size: 18px; }
+    .nav-item.active { color: #a78bfa; }
 
-    /* Edit Modal */
-    .modal-overlay {
-      display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(8px); z-index: 9999; justify-content: center; align-items: center; padding: 18px;
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.78);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
     }
-    .modal-box {
-      background: var(--surface); border: 1px solid var(--border); width: 100%;
-      max-width: 440px; border-radius: 24px; padding: 22px; max-height: 90vh; overflow-y: auto;
+    .modal-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 18px;
+      width: 100%;
+      max-width: 440px;
+      max-height: 85vh;
+      overflow-y: auto;
     }
 
-    #toast {
-      position: fixed; top: 72px; left: 50%; transform: translateX(-50%);
-      background: var(--primary); color: #09070e; padding: 9px 18px; border-radius: 99px;
-      font-weight: 700; font-size: 12px; display: none; z-index: 10000; box-shadow: 0 10px 25px rgba(0,0,0,0.6);
-    }
-
-    @media (max-width: 600px) {
-      .filter-grid { grid-template-columns: 1fr; }
+    @media print {
+      body { background: #fff; color: #000; }
+      #calcLockScreen, .bottom-nav, .topbar, .no-print { display: none !important; }
+      #appShell { display: block !important; padding: 0; }
+      .card { border: 1px solid #ccc; background: #fff; color: #000; }
     }
   </style>
 </head>
 <body>
 
-<!-- AESTHETIC SCIENTIFIC CALCULATOR DISGUISE SCREEN -->
-<div id="sciCalcScreen">
-  <div class="sci-topbar">
-    <div class="sci-title"><span>fx-991EX</span> • <span>SCIENTIFIC</span></div>
-    <button class="sci-badge" id="angleModeBtn" onclick="toggleAngleMode()">DEG</button>
-  </div>
-
-  <div class="sci-display-card">
-    <div class="sci-expr" id="sciHistory"></div>
-    <div class="sci-main-val" id="sciScreen">0</div>
-  </div>
-
-  <div class="sci-keypad">
-    <button class="s-btn fn" onclick="sciFunc('sin(')">sin</button>
-    <button class="s-btn fn" onclick="sciFunc('cos(')">cos</button>
-    <button class="s-btn fn" onclick="sciFunc('tan(')">tan</button>
-    <button class="s-btn fn" onclick="sciFunc('log(')">log</button>
-    <button class="s-btn fn" onclick="sciFunc('ln(')">ln</button>
-
-    <button class="s-btn fn" onclick="sciAppend('(')">(</button>
-    <button class="s-btn fn" onclick="sciAppend(')')">)</button>
-    <button class="s-btn fn" onclick="sciAppend('^')">xʸ</button>
-    <button class="s-btn fn" onclick="sciFunc('√(')">√</button>
-    <button class="s-btn fn" onclick="sciAppend('π')">π</button>
-
-    <button class="s-btn" onclick="sciAppend('7')">7</button>
-    <button class="s-btn" onclick="sciAppend('8')">8</button>
-    <button class="s-btn" onclick="sciAppend('9')">9</button>
-    <button class="s-btn clr" onclick="sciBack()">DEL</button>
-    <button class="s-btn clr" onclick="sciClear()">AC</button>
-
-    <button class="s-btn" onclick="sciAppend('4')">4</button>
-    <button class="s-btn" onclick="sciAppend('5')">5</button>
-    <button class="s-btn" onclick="sciAppend('6')">6</button>
-    <button class="s-btn op" onclick="sciAppend('×')">×</button>
-    <button class="s-btn op" onclick="sciAppend('÷')">÷</button>
-
-    <button class="s-btn" onclick="sciAppend('1')">1</button>
-    <button class="s-btn" onclick="sciAppend('2')">2</button>
-    <button class="s-btn" onclick="sciAppend('3')">3</button>
-    <button class="s-btn op" onclick="sciAppend('+')">+</button>
-    <button class="s-btn op" onclick="sciAppend('−')">−</button>
-
-    <button class="s-btn" onclick="sciAppend('0')">0</button>
-    <button class="s-btn" onclick="sciAppend('00')">00</button>
-    <button class="s-btn" onclick="sciAppend('.')">.</button>
-    <button class="s-btn op" onclick="sciAppend('%')">%</button>
-    <button class="s-btn eq" onclick="sciEquals()">=</button>
-  </div>
-</div>
-
-<div class="container">
-  <!-- Sticky Top App Bar -->
-  <div class="topbar">
-    <div class="brand">
-      <div class="logo-box">🎓</div>
-      <div>
-        <div class="app-name">Campus Expense Tracker</div>
-        <div class="app-sub">Hostel & College Daily Log</div>
-      </div>
+  <!-- ================= 1. SCIENTIFIC CALCULATOR LOCK ================= -->
+  <div id="calcLockScreen">
+    <div class="calc-brand">FX-991EX SCIENTIFIC</div>
+    <div class="calc-display-box">
+      <div class="calc-expr" id="calcExpr"></div>
+      <div class="calc-result" id="calcRes">0</div>
     </div>
-    <div class="top-actions">
-      <button class="icon-pill" id="eyeToggleBtn" title="Toggle Blur Privacy" onclick="toggleStealthBlur()">👁️</button>
-      <button class="icon-pill" title="Change Calculator PIN" onclick="changeSecretPin()">🔑</button>
-      <button class="icon-pill" title="Lock to Calculator" onclick="lockVault()">🔒</button>
+    <div class="calc-sci-row">
+      <button class="c-btn c-sci" onclick="calcInput('Math.sin(')">sin</button>
+      <button class="c-btn c-sci" onclick="calcInput('Math.cos(')">cos</button>
+      <button class="c-btn c-sci" onclick="calcInput('Math.tan(')">tan</button>
+      <button class="c-btn c-sci" onclick="calcInput('Math.log10(')">log</button>
+      <button class="c-btn c-sci" onclick="calcInput('Math.sqrt(')">√</button>
+      <button class="c-btn c-sci" onclick="calcInput('(')">(</button>
+      <button class="c-btn c-sci" onclick="calcInput(')')">)</button>
+      <button class="c-btn c-sci" onclick="calcInput('Math.PI')">π</button>
+      <button class="c-btn c-sci" onclick="calcInput('**')">x^y</button>
+      <button class="c-btn c-sci" onclick="calcInput('/100')">%</button>
+    </div>
+    <div class="calc-grid">
+      <button class="c-btn c-ac" onclick="calcClear()">AC</button>
+      <button class="c-btn c-op" onclick="calcDel()">DEL</button>
+      <button class="c-btn c-op" onclick="calcInput('/')">÷</button>
+      <button class="c-btn c-op" onclick="calcInput('*')">×</button>
+
+      <button class="c-btn" onclick="calcInput('7')">7</button>
+      <button class="c-btn" onclick="calcInput('8')">8</button>
+      <button class="c-btn" onclick="calcInput('9')">9</button>
+      <button class="c-btn c-op" onclick="calcInput('-')">−</button>
+
+      <button class="c-btn" onclick="calcInput('4')">4</button>
+      <button class="c-btn" onclick="calcInput('5')">5</button>
+      <button class="c-btn" onclick="calcInput('6')">6</button>
+      <button class="c-btn c-op" onclick="calcInput('+')">+</button>
+
+      <button class="c-btn" onclick="calcInput('1')">1</button>
+      <button class="c-btn" onclick="calcInput('2')">2</button>
+      <button class="c-btn" onclick="calcInput('3')">3</button>
+      <button class="c-btn c-eq" style="grid-row: span 2;" onclick="calcEvaluate()">=</button>
+
+      <button class="c-btn" style="grid-column: span 2;" onclick="calcInput('0')">0</button>
+      <button class="c-btn" onclick="calcInput('.')">.</button>
     </div>
   </div>
 
-  <!-- TAB 1: ENTRY & DASHBOARD -->
-  <div id="tab-entry" class="tab-view active">
-    <div class="hero">
-      <div class="hero-row">
+  <!-- ================= 2. MAIN ADMIN DASHBOARD ================= -->
+  <div id="appShell">
+    <div class="topbar">
+      <div class="top-left">
+        <div class="app-icon">⚡</div>
         <div>
-          <div class="lbl-sm">Active Week Spend</div>
-          <div class="big-num blur-sensitive" id="statTotal">₹0</div>
-        </div>
-        <div style="text-align:right;">
-          <div class="lbl-sm">Daily Avg</div>
-          <div class="blur-sensitive" style="font-family:'Outfit',sans-serif; font-size:21px; font-weight:700; color:var(--primary);" id="statAvg">₹0</div>
+          <h1 id="at_appTitle">HisabCloud Pro</h1>
+          <p id="syncStatusText">● Cloud & Firebase Ready</p>
         </div>
       </div>
-      <div class="kpi-grid">
-        <div class="kpi-box">
-          <span>Logged Days</span>
-          <strong id="statEntries" style="color:var(--violet);">0 Days</strong>
-        </div>
-        <div class="kpi-box">
-          <span>Highest Day</span>
-          <strong class="blur-sensitive" id="statMax" style="color:var(--rose);">₹0</strong>
-        </div>
-        <div class="kpi-box">
-          <span>Month Spend</span>
-          <strong class="blur-sensitive" id="statMonth" style="color:var(--emerald);">₹0</strong>
-        </div>
+      <div class="top-actions">
+        <button class="pill-btn" id="adminLangToggleBtn" onclick="toggleAdminLang()">EN / বাং</button>
+        <button class="pill-btn" onclick="lockApp()">🔒</button>
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-title">
-        <span>⚡ Quick Campus Entry</span>
-        <span style="font-size:11px; color:var(--primary); font-weight:500;">Number + Space = ( )</span>
-      </div>
-
-      <div id="existingSyncBanner" class="sync-banner">
-        <span id="syncBannerText">✏️ Existing entry loaded — add or edit items</span>
-        <span style="font-size:10px; opacity:0.85;">No Duplicate</span>
-      </div>
-
-      <div class="presets">
-        <button type="button" class="preset-chip" onclick="quickFill('m_val', '20 (Breakfast)')">+ ₹20 Breakfast</button>
-        <button type="button" class="preset-chip" onclick="quickFill('l_val', '60 (Canteen Lunch)')">+ ₹60 Lunch</button>
-        <button type="button" class="preset-chip" onclick="quickFill('s_val', '15 (Tea & Snacks)')">+ ₹15 Snacks</button>
-        <button type="button" class="preset-chip" onclick="quickFill('d_val', '45 (Hostel Dinner)')">+ ₹45 Dinner</button>
-      </div>
-
-      <div class="field">
-        <label>Date (Auto IST Sync — Loads Existing Log)</label>
-        <input type="date" id="entryDate" onchange="loadEntryForSelectedDate()">
-      </div>
-
-      <div class="grid-2">
-        <div class="field">
-          <label>Morning</label>
-          <input type="text" class="smart-input blur-sensitive" id="m_val" placeholder="e.g. 20 (Kachori)">
+    <!-- TAB 1: DAILY EXPENSE ENTRY & CUSTOM SHORTCUTS -->
+    <div id="tab-entry" class="tab-pane active">
+      <!-- Live Fuel Mini Status -->
+      <div class="card" style="padding:13px 16px;">
+        <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:700;">
+          <span id="at_fuelMiniTitle">⛽ Active Budget Fuel</span>
+          <span id="miniFuelText" style="color:#34d399;">₹0 / ₹0 (100%)</span>
         </div>
-        <div class="field">
-          <label>Noon</label>
-          <input type="text" class="smart-input blur-sensitive" id="l_val" placeholder="e.g. 60 (Rice Fish)">
+        <div class="mini-fuel-bar">
+          <div class="mini-fuel-fill" id="miniFuelFill" style="width:100%;"></div>
         </div>
       </div>
 
-      <div class="grid-2">
-        <div class="field">
-          <label>Afternoon</label>
-          <input type="text" class="smart-input blur-sensitive" id="s_val" placeholder="e.g. 15 (Tea)">
+      <!-- Entry Form -->
+      <div class="card">
+        <div class="card-title">
+          <span id="at_entryTitle">📝 Daily Expense Entry</span>
+          <span id="liveFormTotal" style="color:#38bdf8; font-size:16px;">Total: ₹0</span>
         </div>
-        <div class="field">
-          <label>Night</label>
-          <input type="text" class="smart-input blur-sensitive" id="d_val" placeholder="e.g. 45 (Roti Tadka)">
-        </div>
-      </div>
 
-      <div class="field" style="margin-bottom:0;">
-        <label>Other Expenses (Bus, Xerox, Lab)</label>
-        <div id="othersContainer">
-          <div class="other-row">
-            <input type="text" class="other-item smart-input blur-sensitive" placeholder="e.g. 20 (Bus Fare)">
+        <!-- Customizable Quick Shortcuts -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <span style="font-size:11px; color:var(--muted); font-weight:600;" id="at_scLabel">⚡ Quick Shortcuts (Tap to Add)</span>
+          <button class="pill-btn" style="padding:3px 9px; font-size:11px;" onclick="openShortcutModal()">⚙️ Customize</button>
+        </div>
+        <div class="shortcut-wrap" id="shortcutChips"></div>
+
+        <div class="inp-box">
+          <label id="at_dateLbl">Date</label>
+          <input type="date" id="expDate" class="inp" onchange="loadDateIntoForm()" />
+        </div>
+
+        <div class="field-grid">
+          <div class="inp-box">
+            <label id="at_mornLbl">🌅 Morning (e.g. 20+10)</label>
+            <input type="text" id="expMorning" class="inp" placeholder="0" oninput="recalcFormTotal()" />
+          </div>
+          <div class="inp-box">
+            <label id="at_noonLbl">☀️ Noon</label>
+            <input type="text" id="expNoon" class="inp" placeholder="0" oninput="recalcFormTotal()" />
+          </div>
+          <div class="inp-box">
+            <label id="at_aftLbl">🌇 Afternoon</label>
+            <input type="text" id="expAfternoon" class="inp" placeholder="0" oninput="recalcFormTotal()" />
+          </div>
+          <div class="inp-box">
+            <label id="at_nightLbl">🌙 Night</label>
+            <input type="text" id="expNight" class="inp" placeholder="0" oninput="recalcFormTotal()" />
           </div>
         </div>
-        <button type="button" class="btn-ghost" onclick="addOtherInput('othersContainer')">+ Add More Item</button>
-      </div>
-
-      <div class="submit-bar">
-        <div>
-          <span class="lbl-sm">Day Total</span>
-          <div class="blur-sensitive" id="liveTotal" style="font-family:'Outfit',sans-serif; font-size:24px; font-weight:800; color:var(--primary);">₹0</div>
+        <div class="inp-box">
+          <label id="at_otherLbl">📦 Other / Mess / Travel</label>
+          <input type="text" id="expOther" class="inp" placeholder="0" oninput="recalcFormTotal()" />
         </div>
-        <button id="saveBtn" class="btn-primary" onclick="submitExpense()">Save Entry →</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- TAB 2: ANALYTICS & BUDGET -->
-  <div id="tab-analytics" class="tab-view">
-    <div class="card">
-      <div class="card-title">
-        <span>🎯 Monthly Budget Planner</span>
-        <button class="btn-ghost" style="padding:5px 10px; font-size:11px;" onclick="setMonthlyBudget()">Set Limit</button>
-      </div>
-      <div class="blur-sensitive" style="display:flex; justify-content:space-between; font-size:13px; font-weight:600;">
-        <span id="budgetSpentLbl">Spent: ₹0</span>
-        <span id="budgetLimitLbl" style="color:var(--muted);">Limit: ₹4,000</span>
-      </div>
-      <div class="budget-bar-bg">
-        <div class="budget-bar-fill" id="budgetBarFill"></div>
-      </div>
-      <div class="blur-sensitive" style="display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:6px;">
-        <span id="budgetRemLbl">Remaining: ₹4,000</span>
-        <span id="safeDailyLbl" style="color:var(--primary); font-weight:700;">Safe Daily: ₹133/day</span>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">📊 Active Week Category Split</div>
-      <div class="chart-box blur-sensitive">
-        <canvas id="catChart"></canvas>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">📈 Daily Spend Trend (Active Week)</div>
-      <div class="chart-box blur-sensitive">
-        <canvas id="trendChart"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <!-- TAB 3: FULL LEDGER & REPORTS -->
-  <div id="tab-ledger" class="tab-view">
-    <div class="card">
-      <div class="filter-grid">
-        <div>
-          <label>Filter by Date</label>
-          <input type="date" id="searchDate" oninput="renderTable()">
-        </div>
-        <div>
-          <label>Search Item</label>
-          <input type="text" id="searchText" placeholder="Bus, Xerox, Rice..." oninput="renderTable()">
-        </div>
-        <div>
-          <button class="btn-ghost" style="padding:12px 14px;" onclick="clearFilters()">Reset</button>
-        </div>
-      </div>
-
-      <div class="week-nav">
-        <button class="nav-pill" onclick="prevWeek()">← Prev</button>
-        <div id="centerWeekBtn" style="text-align:center;"></div>
-        <button class="nav-pill" onclick="nextWeek()">Next →</button>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Date & Day</th>
-              <th>Morning</th>
-              <th>Noon</th>
-              <th>Afternoon</th>
-              <th>Night</th>
-              <th>Other</th>
-              <th>Total</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody" class="blur-sensitive">
-            <tr><td colspan="8" style="text-align:center; padding:20px; color:var(--muted);">Loading records...</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="action-row">
-        <div id="weekDeleteContainer"></div>
         <div style="display:flex; gap:8px;">
-          <button class="btn-wa" onclick="shareWeeklyReport()">📲 Share Summary</button>
-          <button class="btn-pdf" onclick="exportPDF()">🖨️ Export PDF</button>
+          <button class="btn" id="at_saveBtn" onclick="saveDailyExpense()">💾 Save & Sync to Cloud</button>
+          <button class="btn btn-outline btn-sm" onclick="clearEntryForm()">Clear</button>
+        </div>
+      </div>
+
+      <!-- Recent History -->
+      <div class="card">
+        <div class="card-title">
+          <span id="at_histTitle">📅 Recent Records (Tap to Edit)</span>
+          <button class="pill-btn" onclick="syncAllData()">↻ Sync</button>
+        </div>
+        <div id="adminExpenseList"></div>
+      </div>
+    </div>
+
+    <!-- TAB 2: STATS, BUDGET FUEL SETTER, SHARE & PDF -->
+    <div id="tab-stats" class="tab-pane">
+      <!-- Set Pocket Money / Budget Fuel Gauge -->
+      <div class="card">
+        <div class="card-title">
+          <span id="at_budgetSetTitle">⛽ Set Budget Fuel Gauge (Live on Client)</span>
+        </div>
+        <div class="field-grid">
+          <div class="inp-box">
+            <label id="at_bAmtLbl">Budget Amount (₹)</label>
+            <input type="number" id="bTotalInput" class="inp" placeholder="1500" />
+          </div>
+          <div class="inp-box">
+            <label id="at_bDaysLbl">For How Many Days</label>
+            <input type="number" id="bDaysInput" class="inp" placeholder="7" />
+          </div>
+        </div>
+        <div class="field-grid">
+          <div class="inp-box">
+            <label id="at_bStartLbl">Cycle Start Date</label>
+            <input type="date" id="bStartInput" class="inp" />
+          </div>
+          <div class="inp-box">
+            <label id="at_bNoteLbl">Note (Optional)</label>
+            <input type="text" id="bNoteInput" class="inp" placeholder="Weekly Mess + Pocket" />
+          </div>
+        </div>
+        <button class="btn btn-success" id="at_bSaveBtn" onclick="saveBudgetCycle()">🚀 Update Live Fuel Gauge</button>
+      </div>
+
+      <!-- Summary & Weekly Chart -->
+      <div class="card">
+        <div class="card-title">
+          <span id="at_analyticsTitle">📊 Expense Analytics (Last 7 Days)</span>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; text-align:center; margin-bottom:10px;">
+          <div style="background:var(--surface-2); padding:10px; border-radius:12px;">
+            <div style="font-size:11px; color:var(--muted);">Today</div>
+            <div style="font-size:15px; font-weight:800;" id="stToday">₹0</div>
+          </div>
+          <div style="background:var(--surface-2); padding:10px; border-radius:12px;">
+            <div style="font-size:11px; color:var(--muted);">7 Days</div>
+            <div style="font-size:15px; font-weight:800;" id="stWeek">₹0</div>
+          </div>
+          <div style="background:var(--surface-2); padding:10px; border-radius:12px;">
+            <div style="font-size:11px; color:var(--muted);">This Month</div>
+            <div style="font-size:15px; font-weight:800;" id="stMonth">₹0</div>
+          </div>
+        </div>
+        <div class="chart-box" id="weeklyChart"></div>
+      </div>
+
+      <!-- WhatsApp Share & PDF Export -->
+      <div class="card no-print">
+        <div class="card-title"><span id="at_exportTitle">📤 Share & Export Reports</span></div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-success" onclick="shareWhatsApp()">💬 WhatsApp Summary</button>
+          <button class="btn btn-outline" onclick="window.print()">📄 Export PDF</button>
         </div>
       </div>
     </div>
+
+    <!-- TAB 3: PRIORITY ALERT, CUSTOM AUDIO, VOLUME & HISTORY -->
+    <div id="tab-alert" class="tab-pane">
+      <div class="card">
+        <div class="card-title">
+          <span id="at_alertSendTitle">🚨 Remote Priority Ring & Alert</span>
+        </div>
+
+        <div class="inp-box">
+          <label id="at_targetDevLbl">Select Target Device</label>
+          <select id="alertTargetSelect" class="inp">
+            <option value="ALL">📢 All Connected Devices</option>
+          </select>
+        </div>
+
+        <!-- Remote Volume Slider -->
+        <div class="inp-box">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <label style="margin:0;" id="at_volLbl">🔊 Remote Ring Volume</label>
+            <span id="volPctDisplay" style="font-size:13px; font-weight:800; color:#fbbf24;">100%</span>
+          </div>
+          <input type="range" id="alertVolumeSlider" min="0" max="100" value="100" style="width:100%; accent-color:#8b5cf6;" oninput="document.getElementById('volPctDisplay').textContent = this.value + '%'" />
+          <div style="display:flex; gap:6px; margin-top:6px;">
+            <button class="pill-btn" style="flex:1;" onclick="setVolPreset(0)">0% Vibrate</button>
+            <button class="pill-btn" style="flex:1;" onclick="setVolPreset(35)">35% Low</button>
+            <button class="pill-btn" style="flex:1;" onclick="setVolPreset(75)">75% Med</button>
+            <button class="pill-btn" style="flex:1;" onclick="setVolPreset(100)">100% Max</button>
+          </div>
+        </div>
+
+        <!-- Quick Presets -->
+        <div class="shortcut-wrap" style="margin-top:8px;">
+          <button class="sc-chip" onclick="setAlertMsg('জরুরি দরকার! একটু কল ব্যাক করুন।')">📞 Call Back</button>
+          <button class="sc-chip" onclick="setAlertMsg('বাজেট প্রায় শেষ! মেস খরচের টাকা প্রয়োজন।')">💰 Fund Needed</button>
+          <button class="sc-chip" onclick="setAlertMsg('অ্যাপে নতুন হিসাব আপডেট করা হয়েছে।')">📊 Check Update</button>
+        </div>
+
+        <div class="inp-box">
+          <label id="at_alertMsgLbl">Alert Message</label>
+          <input type="text" id="alertMsgInput" class="inp" placeholder="Write message to display on full screen..." />
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+          <input type="checkbox" id="useCustomAudioChk" checked style="width:16px; height:16px;" />
+          <label for="useCustomAudioChk" style="font-size:12px; color:#cbd5e1;">Use uploaded custom ringtone (if available for device)</label>
+        </div>
+
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-danger" id="at_ringBtn" onclick="sendPriorityRing()">🔔 RING NOW</button>
+          <button class="btn btn-outline btn-sm" onclick="stopActiveRing()">⏹ Stop</button>
+        </div>
+
+        <!-- Real-Time Delivery & Seen Status Box -->
+        <div id="liveDeliveryBox" style="margin-top:14px; padding:12px; background:var(--surface-2); border-radius:14px; display:none;">
+          <div style="font-size:11px; color:var(--muted); font-weight:700; margin-bottom:6px;">📡 LIVE DELIVERY TRACKER</div>
+          <div id="liveDeliveryList"></div>
+        </div>
+      </div>
+
+      <!-- Per-Device Custom Audio Uploader -->
+      <div class="card">
+        <div class="card-title"><span>🎵 Custom Ringtone per Device</span></div>
+        <div class="inp-box">
+          <label>Assign Audio To Device</label>
+          <select id="audioDeviceSelect" class="inp" onchange="renderSavedAudioInfo()">
+            <option value="ALL">All Devices (Default Custom)</option>
+          </select>
+        </div>
+        <div class="inp-box">
+          <label>Upload MP3 / Audio (Max 1.5 MB)</label>
+          <input type="file" id="customAudioFile" accept="audio/*" class="inp" onchange="uploadCustomAudio(this)" />
+        </div>
+        <div id="savedAudioStatus" style="font-size:12px; color:#94a3b8;">Checking saved audio...</div>
+      </div>
+
+      <!-- Alert & Request History Log -->
+      <div class="card">
+        <div class="card-title">
+          <span id="at_alertHistTitle">📜 Alert & Request History Log</span>
+          <button class="pill-btn" onclick="clearAlertHistory()">Clear</button>
+        </div>
+        <div id="alertHistoryList"></div>
+      </div>
+    </div>
+
+    <!-- TAB 4: AI MODE (GEMINI ASSISTANT + IMAGE + VOICE + CHAT HISTORY) -->
+    <div id="tab-ai" class="tab-pane">
+      <div class="ai-container">
+        <div class="ai-topbar">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button class="pill-btn" onclick="openAiDrawer()">☰ Chats</button>
+            <div class="ai-chat-title" id="currentChatTitle">New Finance Chat</div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="pill-btn" id="ttsToggleBtn" onclick="toggleAiVoiceReply()" title="Auto Speak Replies">🔇</button>
+            <button class="pill-btn" onclick="createNewAiChat()">+ New</button>
+          </div>
+        </div>
+
+        <div class="ai-messages" id="aiMessagesBox"></div>
+
+        <div class="ai-input-bar">
+          <div class="ai-preview-img" id="aiImgPreviewWrap">
+            <img id="aiImgThumb" style="width:36px; height:36px; border-radius:8px; object-fit:cover;" />
+            <span id="aiImgName" style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">image.jpg</span>
+            <button class="pill-btn" style="padding:2px 7px;" onclick="clearAiImage()">✕</button>
+          </div>
+          <div class="ai-controls">
+            <label class="icon-btn" style="display:flex; align-items:center; justify-content:center;" title="Upload Bill/Image">
+              📎
+              <input type="file" id="aiImageInput" accept="image/*" style="display:none;" onchange="handleAiImageSelect(this)" />
+            </label>
+            <button class="icon-btn" id="aiMicBtn" onclick="toggleVoiceInput()" title="Voice Input">🎤</button>
+            <input type="text" id="aiPromptInput" class="inp" style="padding:9px 12px;" placeholder="Ask anything about expenses, budget or upload bill..." onkeydown="if(event.key==='Enter') sendAiMessage()" />
+            <button class="icon-btn" style="background:var(--primary); color:#fff;" onclick="sendAiMessage()">➤</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: CONTROL (4-DIGIT PIN, MULTI-DEVICE KICK, & LANGUAGE/TEXT EDITOR FOR BOTH APPS) -->
+    <div id="tab-control" class="tab-pane">
+      <!-- 4-Digit Client Access PIN -->
+      <div class="card">
+        <div class="card-title"><span id="at_pinCtrlTitle">🔐 Client App 4-Digit Access PIN</span></div>
+        <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">
+          New devices need this 4-digit PIN to log in. Already logged-in phones stay connected until you kick them.
+        </p>
+        <div style="display:flex; gap:8px;">
+          <input type="tel" id="clientPinInput" maxlength="4" class="inp" style="text-align:center; font-size:20px; font-weight:800; letter-spacing:8px;" placeholder="2007" />
+          <button class="btn btn-sm" onclick="updateClientPin()">Update PIN</button>
+        </div>
+      </div>
+
+      <!-- Connected Devices Manager -->
+      <div class="card">
+        <div class="card-title">
+          <span id="at_devMgrTitle">📱 Logged-In Devices</span>
+          <span id="deviceCountBadge" style="font-size:12px; color:#34d399;">0 Active</span>
+        </div>
+        <div id="connectedDevicesList"><div style="font-size:12px; color:var(--muted);">Loading devices...</div></div>
+      </div>
+
+      <!-- Universal Language & Text Customizer (BOTH APPS) -->
+      <div class="card">
+        <div class="card-title"><span id="at_langCtrlTitle">🌐 Language & Text Editor (Both Apps)</span></div>
+
+        <div class="field-grid" style="margin-bottom:12px;">
+          <div class="inp-box">
+            <label>Client App Language</label>
+            <select id="clientLangSelect" class="inp" onchange="saveClientLang(this.value)">
+              <option value="en">English (Default)</option>
+              <option value="bn">বাংলা (Bengali)</option>
+            </select>
+          </div>
+          <div class="inp-box">
+            <label>My Admin App Language</label>
+            <select id="adminLangSelect" class="inp" onchange="saveAdminLang(this.value)">
+              <option value="en">English</option>
+              <option value="bn">বাংলা (Bengali)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid var(--border); padding-top:12px; margin-top:4px;">
+          <div style="font-size:12px; font-weight:700; margin-bottom:8px; color:#c4b5fd;">✏️ Customize Any Label / Text Live</div>
+          <div class="inp-box">
+            <label>1. Choose App to Edit</label>
+            <select id="editTargetApp" class="inp" onchange="populateTextKeyDropdown()">
+              <option value="client">Client App (Campus Expense Live)</option>
+              <option value="admin">My Admin App (HisabCloud Pro)</option>
+            </select>
+          </div>
+          <div class="inp-box">
+            <label>2. Choose Label / Section</label>
+            <select id="editTextKeySelect" class="inp" onchange="loadSelectedTextVal()"></select>
+          </div>
+          <div class="inp-box">
+            <label>3. Custom Text (English or বাংলা)</label>
+            <input type="text" id="editTextCustomVal" class="inp" placeholder="Type custom text..." />
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-sm" style="flex:1;" onclick="saveCustomTextOverride()">✅ Apply Text Live</button>
+            <button class="btn btn-outline btn-sm" onclick="resetCustomTextOverride()">Reset Default</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav no-print">
+      <button class="nav-item active" onclick="switchTab('entry', this)"><span>📝</span><span id="nav_entry">Entry</span></button>
+      <button class="nav-item" onclick="switchTab('stats', this)"><span>📊</span><span id="nav_stats">Stats</span></button>
+      <button class="nav-item" onclick="switchTab('alert', this)"><span>🔔</span><span id="nav_alert">Alert</span></button>
+      <button class="nav-item" onclick="switchTab('ai', this)"><span>✨</span><span id="nav_ai">AI Mode</span></button>
+      <button class="nav-item" onclick="switchTab('control', this)"><span>⚙️</span><span id="nav_control">Control</span></button>
+    </div>
   </div>
 
-  <!-- TAB 4: RING & MESSAGE ALERT -->
-  <div id="tab-alert" class="tab-view">
-    <div class="card">
+  <!-- AI Chat History Drawer -->
+  <div id="aiHistoryModal" onclick="if(event.target===this) closeAiDrawer()">
+    <div class="drawer-panel">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h3 style="font-size:16px; font-weight:800;">💬 Chat History</h3>
+        <button class="pill-btn" onclick="createNewAiChat(); closeAiDrawer();">+ New</button>
+      </div>
+      <div id="aiChatHistoryList"></div>
+    </div>
+  </div>
+
+  <!-- Shortcut Customizer Modal -->
+  <div class="modal-backdrop" id="shortcutModal" onclick="if(event.target===this) closeShortcutModal()">
+    <div class="modal-card">
       <div class="card-title">
-        <span>🔔 Ring & Message Baba</span>
-        <span style="font-size:11px; color:var(--primary); font-weight:700;">Custom Ringtone</span>
+        <span>⚡ Customize Quick Shortcuts</span>
+        <button class="pill-btn" onclick="closeShortcutModal()">✕</button>
       </div>
-
-      <div class="presets">
-        <button type="button" class="preset-chip" onclick="setQuickMsg('টাকা ফুরিয়ে গেছে, একটু দরকার ছিল!')">💸 টাকা ফুরিয়ে গেছে</button>
-        <button type="button" class="preset-chip" onclick="setQuickMsg('একটু জরুরি কথা আছে, ফ্রি হলে কল করো।')">📞 ফ্রি হলে কল করো</button>
-        <button type="button" class="preset-chip" onclick="setQuickMsg('আমি ঠিকঠাক মেসে পৌঁছে গেছি।')">🏠 মেসে পৌঁছে গেছি</button>
+      <div class="field-grid">
+        <div class="inp-box">
+          <label>Label (e.g. Tea 10)</label>
+          <input type="text" id="newScLabel" class="inp" placeholder="Breakfast 20" />
+        </div>
+        <div class="inp-box">
+          <label>Amount (₹)</label>
+          <input type="number" id="newScAmt" class="inp" placeholder="20" />
+        </div>
       </div>
-
-      <div class="field">
-        <label>Write Message (Rings Custom Alert + Shows Banner on Baba's App)</label>
-        <textarea id="customAlertMsg" rows="3" placeholder="যেমন: টাকা ফুরিয়ে গেছে, একটু পাঠিয়ে দিও..."></textarea>
+      <div class="inp-box">
+        <label>Target Slot</label>
+        <select id="newScSlot" class="inp">
+          <option value="expMorning">🌅 Morning</option>
+          <option value="expNoon">☀️ Noon</option>
+          <option value="expAfternoon">🌇 Afternoon</option>
+          <option value="expNight">🌙 Night</option>
+          <option value="expOther">📦 Other</option>
+        </select>
       </div>
-
-      <button class="alert-btn btn-ring" id="sendRingBtn" onclick="sendRingAlert('RING')">
-        🔔 Ring + Send Message
-      </button>
-
-      <button class="alert-btn btn-clear-msg" id="clearRingBtn" onclick="sendRingAlert('IDLE')">
-        🧹 Clear Banner from Baba's App
-      </button>
-
-      <div class="status-pill" id="alertStatusBox">
-        <span style="color:var(--muted);">Status:</span> Ready to send alert.
-      </div>
+      <button class="btn btn-sm" style="width:100%; margin-bottom:14px;" onclick="addCustomShortcut()">+ Add Shortcut</button>
+      <div id="modalShortcutList"></div>
     </div>
   </div>
-</div>
 
-<!-- Bottom Navigation Bar -->
-<nav class="bottom-nav">
-  <button class="nav-tab active" onclick="switchTab('entry', this)">
-    <span class="ic">⚡</span>
-    <span>Entry</span>
-  </button>
-  <button class="nav-tab" onclick="switchTab('analytics', this)">
-    <span class="ic">📊</span>
-    <span>Analytics</span>
-  </button>
-  <button class="nav-tab" onclick="switchTab('ledger', this)">
-    <span class="ic">📒</span>
-    <span>Ledger</span>
-  </button>
-  <button class="nav-tab" onclick="switchTab('alert', this)">
-    <span class="ic">🔔</span>
-    <span>Alert</span>
-  </button>
-</nav>
+  <script>
+    // ================= INITIALIZE FIREBASE =================
+    firebase.initializeApp(window.APP_CONFIG.firebaseConfig);
+    const db = firebase.database();
 
-<!-- Edit Modal -->
-<div id="editModal" class="modal-overlay">
-  <div class="modal-box">
-    <div class="card-title" style="color:var(--primary);">✏️ Edit Expense Record</div>
-    <input type="hidden" id="editRowId">
-    
-    <div class="field">
-      <label>Date & Day</label>
-      <input type="text" id="editDate">
-    </div>
-    <div class="grid-2">
-      <div class="field">
-        <label>Morning</label>
-        <input type="text" class="smart-input" id="editM">
-      </div>
-      <div class="field">
-        <label>Noon</label>
-        <input type="text" class="smart-input" id="editL">
-      </div>
-    </div>
-    <div class="grid-2">
-      <div class="field">
-        <label>Afternoon</label>
-        <input type="text" class="smart-input" id="editS">
-      </div>
-      <div class="field">
-        <label>Night</label>
-        <input type="text" class="smart-input" id="editD">
-      </div>
-    </div>
-    <div class="field">
-      <label>Other Expenses</label>
-      <div id="editOthersContainer"></div>
-      <button type="button" class="btn-ghost" onclick="addOtherInput('editOthersContainer')">+ Add Item</button>
-    </div>
-
-    <div class="grid-2" style="margin-top:16px;">
-      <button type="button" class="btn-ghost" style="padding:12px;" onclick="closeModal()">Cancel</button>
-      <button type="button" id="updateModalBtn" class="btn-primary" onclick="saveEdit()">Update</button>
-    </div>
-  </div>
-</div>
-
-<div id="toast"></div>
-
-<script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbxY-HmehplAlhgq4RUmolx2HxsnuSJ1isHi3UTTuO_8FvsAdGgc8qEc-doefN6cTXNZ/exec";
-
-  /* ================= SCIENTIFIC CALCULATOR & PRIVACY LOGIC ================= */
-  let sciExpression = "";
-  let isDegreeMode = true;
-
-  function getSecretPin() {
-    return localStorage.getItem('campus_expense_pin') || "2007";
-  }
-
-  function toggleAngleMode() {
-    isDegreeMode = !isDegreeMode;
-    document.getElementById('angleModeBtn').innerText = isDegreeMode ? "DEG" : "RAD";
-  }
-
-  function sciAppend(val) {
-    if (sciExpression === "Syntax Error" || sciExpression === "NaN") sciExpression = "";
-    sciExpression += val;
-    document.getElementById('sciScreen').innerText = sciExpression || "0";
-  }
-
-  function sciFunc(fnText) {
-    if (sciExpression === "Syntax Error" || sciExpression === "NaN") sciExpression = "";
-    sciExpression += fnText;
-    document.getElementById('sciScreen').innerText = sciExpression;
-  }
-
-  function sciClear() {
-    sciExpression = "";
-    document.getElementById('sciHistory').innerText = "";
-    document.getElementById('sciScreen').innerText = "0";
-  }
-
-  function sciBack() {
-    if (sciExpression === "Syntax Error" || sciExpression === "NaN") sciExpression = "";
-    sciExpression = sciExpression.slice(0, -1);
-    document.getElementById('sciScreen').innerText = sciExpression || "0";
-  }
-
-  function sciEquals() {
-    const pin = getSecretPin();
-    if (sciExpression === pin) {
-      sciClear();
-      document.getElementById('sciCalcScreen').classList.add('unlocked');
-      showToast("Campus Vault Unlocked");
-      return;
+    // ================= SCIENTIFIC CALCULATOR LOCK =================
+    let calcString = "";
+    function calcInput(val) {
+      calcString += val;
+      document.getElementById("calcExpr").textContent = calcString.replace(/Math\./g, "");
     }
-    try {
-      if (!sciExpression) return;
-      document.getElementById('sciHistory').innerText = sciExpression + " =";
-
-      let expr = sciExpression
-        .replace(/×/g, '*')
-        .replace(/÷/g, '/')
-        .replace(/−/g, '-')
-        .replace(/π/g, 'Math.PI')
-        .replace(/\^/g, '**')
-        .replace(/√\(/g, 'Math.sqrt(')
-        .replace(/log\(/g, 'Math.log10(')
-        .replace(/ln\(/g, 'Math.log(')
-        .replace(/%/g, '/100');
-
-      const toRad = isDegreeMode ? '*(Math.PI/180)' : '';
-      expr = expr
-        .replace(/sin\(([^)]+)\)/g, (_, a) => `Math.sin((${a})${toRad})`)
-        .replace(/cos\(([^)]+)\)/g, (_, a) => `Math.cos((${a})${toRad})`)
-        .replace(/tan\(([^)]+)\)/g, (_, a) => `Math.tan((${a})${toRad})`);
-
-      const openCount = (expr.match(/\(/g) || []).length;
-      const closeCount = (expr.match(/\)/g) || []).length;
-      if (openCount > closeCount) expr += ')'.repeat(openCount - closeCount);
-
-      const result = Function('"use strict";return (' + expr + ')')();
-      if (!Number.isFinite(result)) {
-        sciExpression = "Syntax Error";
-      } else {
-        sciExpression = String(Number(result.toFixed(8)));
+    function calcClear() {
+      calcString = "";
+      document.getElementById("calcExpr").textContent = "";
+      document.getElementById("calcRes").textContent = "0";
+    }
+    function calcDel() {
+      calcString = calcString.slice(0, -1);
+      document.getElementById("calcExpr").textContent = calcString.replace(/Math\./g, "");
+    }
+    function calcEvaluate() {
+      const clean = calcString.trim();
+      if (clean === "2007") {
+        calcClear();
+        document.getElementById("calcLockScreen").style.display = "none";
+        document.getElementById("appShell").style.display = "block";
+        initAdminApp();
+        return;
       }
-      document.getElementById('sciScreen').innerText = sciExpression;
-    } catch (e) {
-      sciExpression = "Syntax Error";
-      document.getElementById('sciScreen').innerText = "Syntax Error";
+      try {
+        // Safe arithmetic evaluation
+        const expr = clean.replace(/\^/g, "**");
+        if (!/^[0-9+\-*/().%\sMathsincoqrtlgPI]+$/.test(expr)) throw new Error("Invalid");
+        const ans = Function('"use strict";return (' + expr + ')')();
+        document.getElementById("calcRes").textContent = Number.isFinite(ans) ? Number(ans.toFixed(6)) : "Error";
+        calcString = String(ans);
+      } catch (e) {
+        document.getElementById("calcRes").textContent = "Syntax Error";
+        calcString = "";
+      }
     }
-  }
-
-  function lockVault() {
-    sciClear();
-    document.getElementById('sciCalcScreen').classList.remove('unlocked');
-  }
-
-  function changeSecretPin() {
-    const current = getSecretPin();
-    const nextPin = prompt("Set new Calculator unlock PIN (numbers only):", current);
-    if (nextPin && /^\d{3,8}$/.test(nextPin.trim())) {
-      localStorage.setItem('campus_expense_pin', nextPin.trim());
-      showToast(`New unlock code: ${nextPin.trim()}=`);
-    } else if (nextPin !== null) {
-      showToast("Use 3 to 8 digits only", "error");
-    }
-  }
-
-  function toggleStealthBlur() {
-    const isBlurred = document.body.classList.toggle('stealth-blur');
-    const btn = document.getElementById('eyeToggleBtn');
-    btn.classList.toggle('active-eye', isBlurred);
-    btn.innerText = isBlurred ? '🙈' : '👁️';
-  }
-
-  /* ================= EXPENSE TRACKER & ALERT LOGIC ================= */
-  let rawData = [];
-  let alertRow = null;
-  let currentActiveRows = [];
-  let activeEditRowId = null;
-  let weekOffset = 0;
-  let lastSyncedDateStr = "";
-  let catChartInstance = null;
-  let trendChartInstance = null;
-  const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-  function switchTab(tabName, el) {
-    document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
-    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-    document.getElementById(`tab-${tabName}`).classList.add('active');
-    el.classList.add('active');
-    if (tabName === 'analytics') renderCharts();
-    if (tabName === 'alert') updateAlertStatusUI();
-  }
-
-  function setQuickMsg(text) {
-    document.getElementById('customAlertMsg').value = text;
-  }
-
-  async function sendRingAlert(mode) {
-    const btn = document.getElementById('sendRingBtn');
-    const statusBox = document.getElementById('alertStatusBox');
-    let msg = document.getElementById('customAlertMsg').value.trim();
-
-    if (mode === 'RING' && !msg) {
-      msg = "টাকা ফুরিয়ে গেছে, একটু দরকার ছিল!";
-      document.getElementById('customAlertMsg').value = msg;
+    function lockApp() {
+      document.getElementById("appShell").style.display = "none";
+      document.getElementById("calcLockScreen").style.display = "flex";
     }
 
-    btn.disabled = true;
-    statusBox.innerHTML = mode === 'RING' ? `⏳ Sending ring & message...` : `⏳ Clearing banner...`;
+    // ================= TAB NAVIGATION =================
+    function switchTab(tabName, btnEl) {
+      document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("active"));
+      document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
+      document.getElementById("tab-" + tabName).classList.add("active");
+      btnEl.classList.add("active");
+    }
 
-    const nowTime = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-    const entry = {
-      date: "31/12/2099 (Alert)",
-      morning: mode,
-      noon: mode === 'RING' ? msg : "",
-      afternoon: String(Date.now()),
-      night: mode === 'RING' ? nowTime : "",
-      other: "",
-      total: 0
+    // ================= GLOBAL STATE =================
+    let expensesData = [];
+    let currentBudget = null;
+    let connectedDevices = {};
+    let adminLang = localStorage.getItem("hc_admin_lang") || "en";
+    let adminCustomTexts = JSON.parse(localStorage.getItem("hc_admin_texts") || "{}");
+    let clientCustomTexts = {};
+    let shortcuts = JSON.parse(localStorage.getItem("hc_shortcuts") || "null") || [
+      { id: "s1", label: "Breakfast ₹20", amt: 20, slot: "expMorning" },
+      { id: "s2", label: "Lunch ₹45", amt: 45, slot: "expNoon" },
+      { id: "s3", label: "Tea/Tiffin ₹15", amt: 15, slot: "expAfternoon" },
+      { id: "s4", label: "Dinner ₹40", amt: 40, slot: "expNight" }
+    ];
+
+    // ================= LANGUAGE & TEXT DICTIONARIES =================
+    const ADMIN_DICT = {
+      en: {
+        appTitle: "HisabCloud Pro",
+        fuelMiniTitle: "⛽ Active Budget Fuel",
+        entryTitle: "📝 Daily Expense Entry",
+        scLabel: "⚡ Quick Shortcuts (Tap to Add)",
+        dateLbl: "Date",
+        mornLbl: "🌅 Morning (e.g. 20+10)",
+        noonLbl: "☀️ Noon",
+        aftLbl: "🌇 Afternoon",
+        nightLbl: "🌙 Night",
+        otherLbl: "📦 Other / Mess / Travel",
+        saveBtn: "💾 Save & Sync to Cloud",
+        histTitle: "📅 Recent Records (Tap to Edit)",
+        budgetSetTitle: "⛽ Set Budget Fuel Gauge (Live on Client)",
+        bAmtLbl: "Budget Amount (₹)",
+        bDaysLbl: "For How Many Days",
+        bStartLbl: "Cycle Start Date",
+        bNoteLbl: "Note (Optional)",
+        bSaveBtn: "🚀 Update Live Fuel Gauge",
+        analyticsTitle: "📊 Expense Analytics (Last 7 Days)",
+        exportTitle: "📤 Share & Export Reports",
+        alertSendTitle: "🚨 Remote Priority Ring & Alert",
+        targetDevLbl: "Select Target Device",
+        volLbl: "🔊 Remote Ring Volume",
+        alertMsgLbl: "Alert Message",
+        ringBtn: "🔔 RING NOW",
+        alertHistTitle: "📜 Alert & Request History Log",
+        pinCtrlTitle: "🔐 Client App 4-Digit Access PIN",
+        devMgrTitle: "📱 Logged-In Devices",
+        langCtrlTitle: "🌐 Language & Text Editor (Both Apps)",
+        nav_entry: "Entry",
+        nav_stats: "Stats",
+        nav_alert: "Alert",
+        nav_ai: "AI Mode",
+        nav_control: "Control"
+      },
+      bn: {
+        appTitle: "HisabCloud Pro",
+        fuelMiniTitle: "⛽ বর্তমান বাজেট ফুয়েল",
+        entryTitle: "📝 দৈনিক খরচের এন্ট্রি",
+        scLabel: "⚡ কুইক শর্টকাট (ট্যাপ করলে যোগ হবে)",
+        dateLbl: "তারিখ",
+        mornLbl: "🌅 সকাল (যেমন 20+10)",
+        noonLbl: "☀️ দুপুর",
+        aftLbl: "🌇 বিকেল",
+        nightLbl: "🌙 রাত",
+        otherLbl: "📦 অন্যান্য / মেস / যাতায়াত",
+        saveBtn: "💾 সেভ ও ক্লাউড সিঙ্ক করুন",
+        histTitle: "📅 সাম্প্রতিক হিসাব (এডিট করতে ট্যাপ করুন)",
+        budgetSetTitle: "⛽ বাজেট ফুয়েল মিটার সেট করুন",
+        bAmtLbl: "মোট বাজেট (₹)",
+        bDaysLbl: "কত দিনের জন্য",
+        bStartLbl: "শুরুর তারিখ",
+        bNoteLbl: "নোট (ঐচ্ছিক)",
+        bSaveBtn: "🚀 লাইভ ফুয়েল মিটার আপডেট করুন",
+        analyticsTitle: "📊 খরচের গ্রাফ (গত ৭ দিন)",
+        exportTitle: "📤 রিপোর্ট শেয়ার ও PDF এক্সপোর্ট",
+        alertSendTitle: "🚨 রিমোট প্রায়োরিটি রিং ও অ্যালার্ট",
+        targetDevLbl: "ডিভাইস সিলেক্ট করুন",
+        volLbl: "🔊 রিমোট রিং ভলিউম",
+        alertMsgLbl: "অ্যালার্ট মেসেজ",
+        ringBtn: "🔔 এখনি রিং পাঠান",
+        alertHistTitle: "📜 অ্যালার্ট ও রিকোয়েস্ট হিস্ট্রি",
+        pinCtrlTitle: "🔐 ক্লায়েন্ট অ্যাপের ৪-ডিজিট পিন",
+        devMgrTitle: "📱 লগইন থাকা ডিভাইসসমূহ",
+        langCtrlTitle: "🌐 ভাষা ও টেক্সট এডিটর (দুই অ্যাপের জন্য)",
+        nav_entry: "এন্ট্রি",
+        nav_stats: "হিসাব",
+        nav_alert: "অ্যালার্ট",
+        nav_ai: "AI মোড",
+        nav_control: "কন্ট্রোল"
+      }
     };
 
-    const payload = alertRow
-      ? { action: 'update', rowId: alertRow.rowId, entry: entry }
-      : { action: 'save', entry: entry };
+    const CLIENT_TEXT_KEYS = {
+      loginTitle: "Login Screen Title",
+      loginSub: "Login Subtitle",
+      devLabel: "Device Name Label",
+      pinLabel: "4-Digit PIN Label",
+      loginBtn: "Login Button Text",
+      appTitle: "Client Header Title",
+      liveStatus: "Live Status Subtitle",
+      alertHeader: "Alert Banner Header",
+      fuelTitle: "Fuel Gauge Card Title",
+      lblTotal: "Allocated Budget Label",
+      lblSpent: "Spent Label",
+      lblLeft: "Remaining Label",
+      stHigh: "Fuel High Badge (>70%)",
+      stMid: "Fuel Moderate Badge (40-70%)",
+      stLow: "Fuel Low Badge (20-40%)",
+      stCrit: "Fuel Near Empty Badge (10-20%)",
+      stEmpty: "Fuel Critical Badge (<10%)",
+      sumToday: "Today Summary Label",
+      sumWeek: "Last 7 Days Label",
+      sumMonth: "This Month Label",
+      logTitle: "Daily Expense List Title"
+    };
 
-    try {
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
-      const result = await res.json();
-      if (result.status === 'success') {
-        showToast(mode === 'RING' ? 'Ring & Message Sent!' : 'Banner Cleared!');
-        await fetchData();
-      } else {
-        throw new Error(result.message);
-      }
-    } catch (err) {
-      statusBox.innerHTML = `❌ Failed: ${err.message}`;
-      showToast('Failed to send', 'error');
-    } finally {
-      btn.disabled = false;
-    }
-  }
-
-  function updateAlertStatusUI() {
-    const statusBox = document.getElementById('alertStatusBox');
-    if (alertRow && alertRow.morning === 'RING' && alertRow.noon && alertRow.noon !== '-') {
-      statusBox.innerHTML = `🔔 <b>Active Message on Baba's App:</b><br>"${alertRow.noon}" <span style="color:var(--muted);">(${alertRow.night || ''})</span>`;
-    } else {
-      statusBox.innerHTML = `<span style="color:var(--muted);">Status:</span> No active banner on Baba's app.`;
-    }
-  }
-
-  function quickFill(inputId, text) {
-    const inp = document.getElementById(inputId);
-    inp.value = text;
-    calcPreview();
-    showToast(`Added ${text}`);
-  }
-
-  function getLocalTodayISO() {
-    const now = new Date();
-    const yyyy = now.getFullYear();
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const dd = String(now.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-  }
-
-  function syncDateIfNeeded(force = false) {
-    const currentLocalDate = getLocalTodayISO();
-    const dateInput = document.getElementById('entryDate');
-    const changed = force || !dateInput.value || dateInput.value === lastSyncedDateStr;
-    if (changed && dateInput.value !== currentLocalDate) {
-      dateInput.value = currentLocalDate;
-      loadEntryForSelectedDate();
-    } else if (!dateInput.value) {
-      dateInput.value = currentLocalDate;
-    }
-    lastSyncedDateStr = currentLocalDate;
-  }
-
-  window.onload = () => {
-    syncDateIfNeeded(true);
-    document.querySelectorAll('.smart-input').forEach(attachSmartListener);
-    fetchData();
-
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) {
-        syncDateIfNeeded(false);
-        renderTable();
-      }
-    });
-    setInterval(() => syncDateIfNeeded(false), 60000);
-  };
-
-  function showToast(msg, type = 'success') {
-    const t = document.getElementById('toast');
-    t.innerText = msg;
-    t.style.background = type === 'error' ? '#fb7185' : '#f59e0b';
-    t.style.color = type === 'error' ? '#fff' : '#09070e';
-    t.style.display = 'block';
-    setTimeout(() => { t.style.display = 'none'; }, 2800);
-  }
-
-  function cleanItemText(str) {
-    return String(str || '').replace(/\s*\(\s*\)/g, '').trim();
-  }
-
-  function extractAmount(str) {
-    if (!str || str === "-") return 0;
-    const matches = String(str).match(/\d+(\.\d+)?/g);
-    if (!matches) return 0;
-    return matches.reduce((sum, num) => sum + parseFloat(num), 0);
-  }
-
-  function attachSmartListener(input) {
-    input.addEventListener('input', function(e) {
-      const val = this.value;
-      const pos = this.selectionStart;
-      if (e.inputType === 'insertText' && e.data === ' ') {
-        const beforeCursor = val.slice(0, pos);
-        if (/^\s*\d+(\.\d+)?\s$/.test(beforeCursor) && !val.includes('(')) {
-          const numPart = beforeCursor.trim();
-          const afterCursor = val.slice(pos);
-          this.value = numPart + ' ()' + afterCursor;
-          const newPos = numPart.length + 2;
-          this.setSelectionRange(newPos, newPos);
+    function applyAdminLanguage() {
+      const dict = ADMIN_DICT[adminLang] || ADMIN_DICT.en;
+      for (const key of Object.keys(dict)) {
+        const el = document.getElementById(key.startsWith("nav_") ? key : "at_" + key);
+        if (el) {
+          el.textContent = adminCustomTexts[key] || dict[key];
         }
       }
-      calcPreview();
-    });
-  }
-
-  function calcPreview() {
-    const m = extractAmount(document.getElementById('m_val').value);
-    const l = extractAmount(document.getElementById('l_val').value);
-    const s = extractAmount(document.getElementById('s_val').value);
-    const d = extractAmount(document.getElementById('d_val').value);
-    const otherData = getDynamicOthers('othersContainer');
-    const total = m + l + s + d + otherData.total;
-    document.getElementById('liveTotal').innerText = '₹' + total;
-  }
-
-  function addOtherInput(containerId, val = '') {
-    const container = document.getElementById(containerId);
-    const div = document.createElement('div');
-    div.className = 'other-row';
-    div.innerHTML = `
-      <input type="text" class="other-item smart-input blur-sensitive" value="${val}" placeholder="e.g. 50 (Lab Copy)">
-      <button type="button" class="btn-del-item" onclick="this.parentElement.remove(); calcPreview();">✕</button>
-    `;
-    container.appendChild(div);
-    attachSmartListener(div.querySelector('input'));
-  }
-
-  function resetOthersContainer(containerId, items = []) {
-    const container = document.getElementById(containerId);
-    container.innerHTML = '';
-    if (items.length === 0) {
-      const div = document.createElement('div');
-      div.className = 'other-row';
-      div.innerHTML = `<input type="text" class="other-item smart-input blur-sensitive" placeholder="e.g. 20 (Bus Fare)">`;
-      container.appendChild(div);
-      attachSmartListener(div.querySelector('input'));
-    } else {
-      items.forEach((val, idx) => {
-        if (idx === 0) {
-          const div = document.createElement('div');
-          div.className = 'other-row';
-          div.innerHTML = `<input type="text" class="other-item smart-input blur-sensitive" value="${val}" placeholder="e.g. 20 (Bus Fare)">`;
-          container.appendChild(div);
-          attachSmartListener(div.querySelector('input'));
-        } else {
-          addOtherInput(containerId, val);
-        }
-      });
+      document.getElementById("adminLangSelect").value = adminLang;
+      document.getElementById("adminLangToggleBtn").textContent = adminLang === "en" ? "🌐 বাং" : "🌐 EN";
     }
-  }
 
-  function getDynamicOthers(containerId) {
-    const inputs = document.querySelectorAll(`#${containerId} .other-item`);
-    let items = [];
-    let total = 0;
-    inputs.forEach(inp => {
-      const val = cleanItemText(inp.value);
-      if (val) {
-        items.push(val);
-        total += extractAmount(val);
+    function toggleAdminLang() {
+      saveAdminLang(adminLang === "en" ? "bn" : "en");
+    }
+
+    function saveAdminLang(lang) {
+      adminLang = lang;
+      localStorage.setItem("hc_admin_lang", lang);
+      applyAdminLanguage();
+    }
+
+    function saveClientLang(lang) {
+      db.ref("config/clientLang").set(lang);
+      alert("Client App language updated to " + (lang === "en" ? "English" : "বাংলা"));
+    }
+
+    function populateTextKeyDropdown() {
+      const target = document.getElementById("editTargetApp").value;
+      const sel = document.getElementById("editTextKeySelect");
+      sel.innerHTML = "";
+      const keysObj = target === "client" ? CLIENT_TEXT_KEYS : ADMIN_DICT.en;
+      for (const [k, desc] of Object.entries(keysObj)) {
+        const opt = document.createElement("option");
+        opt.value = k;
+        opt.textContent = target === "client" ? `${desc} (${k})` : `${k} — ${desc}`;
+        sel.appendChild(opt);
       }
-    });
-    return { text: items.join(', '), total: total };
-  }
+      loadSelectedTextVal();
+    }
 
-  function formatDateWithDay(isoDate) {
-    if (!isoDate) return "";
-    const parts = isoDate.split('-');
-    const d = new Date(parts[0], parts[1] - 1, parts[2]);
-    return `${parts[2]}/${parts[1]}/${parts[0]} (${daysOfWeek[d.getDay()]})`;
-  }
-
-  function parseEntryDate(dateStr) {
-    const datePart = dateStr.split(' ')[0];
-    const parts = datePart.split('/');
-    if (parts.length !== 3) return new Date(0);
-    return new Date(parts[2], parts[1] - 1, parts[0]);
-  }
-
-  function loadEntryForSelectedDate() {
-    const isoDate = document.getElementById('entryDate').value;
-    const banner = document.getElementById('existingSyncBanner');
-    const saveBtn = document.getElementById('saveBtn');
-
-    if (!isoDate) return;
-    const dateFormatted = formatDateWithDay(isoDate);
-    const existing = rawData.find(r => r.date === dateFormatted);
-
-    if (existing) {
-      activeEditRowId = existing.rowId;
-      document.getElementById('m_val').value = existing.morning === "-" ? "" : existing.morning;
-      document.getElementById('l_val').value = existing.noon === "-" ? "" : existing.noon;
-      document.getElementById('s_val').value = existing.afternoon === "-" ? "" : existing.afternoon;
-      document.getElementById('d_val').value = existing.night === "-" ? "" : existing.night;
-
-      if (existing.other && existing.other !== "-") {
-        const parts = existing.other.split(',').map(p => p.trim()).filter(Boolean);
-        resetOthersContainer('othersContainer', parts);
+    function loadSelectedTextVal() {
+      const target = document.getElementById("editTargetApp").value;
+      const key = document.getElementById("editTextKeySelect").value;
+      if (target === "client") {
+        document.getElementById("editTextCustomVal").value = clientCustomTexts[key] || "";
       } else {
-        resetOthersContainer('othersContainer', []);
+        document.getElementById("editTextCustomVal").value = adminCustomTexts[key] || "";
       }
-
-      document.getElementById('syncBannerText').innerText = `✏️ Loaded ${dateFormatted.split(' ')[0]} — add/edit & update`;
-      banner.classList.add('show');
-      saveBtn.innerText = 'Update Entry →';
-      saveBtn.classList.add('update-mode');
-    } else {
-      activeEditRowId = null;
-      document.getElementById('m_val').value = '';
-      document.getElementById('l_val').value = '';
-      document.getElementById('s_val').value = '';
-      document.getElementById('d_val').value = '';
-      resetOthersContainer('othersContainer', []);
-
-      banner.classList.remove('show');
-      saveBtn.innerText = 'Save Entry →';
-      saveBtn.classList.remove('update-mode');
-    }
-    calcPreview();
-  }
-
-  async function fetchData() {
-    try {
-      const res = await fetch(API_URL);
-      const allRows = await res.json();
-      alertRow = allRows.find(r => String(r.date || '').includes("2099")) || null;
-      rawData = allRows.filter(r => !String(r.date || '').includes("2099") && r.date !== "__SYS_CMD__");
-      loadEntryForSelectedDate();
-      renderTable();
-      updateAlertStatusUI();
-    } catch (err) {
-      showToast('Failed to sync cloud data', 'error');
-    }
-  }
-
-  async function submitExpense() {
-    const btn = document.getElementById('saveBtn');
-    const isoDate = document.getElementById('entryDate').value;
-    if (!isoDate) return showToast('Please select a date', 'error');
-
-    const dateFormatted = formatDateWithDay(isoDate);
-    const m = cleanItemText(document.getElementById('m_val').value);
-    const l = cleanItemText(document.getElementById('l_val').value);
-    const s = cleanItemText(document.getElementById('s_val').value);
-    const d = cleanItemText(document.getElementById('d_val').value);
-    const otherData = getDynamicOthers('othersContainer');
-
-    const total = extractAmount(m) + extractAmount(l) + extractAmount(s) + extractAmount(d) + otherData.total;
-    if (total === 0 && !m && !l && !s && !d && !otherData.text) {
-      return showToast('Enter at least one expense item', 'error');
     }
 
-    const existingRecord = rawData.find(r => r.date === dateFormatted);
-    const targetRowId = activeEditRowId || (existingRecord ? existingRecord.rowId : null);
+    function saveCustomTextOverride() {
+      const target = document.getElementById("editTargetApp").value;
+      const key = document.getElementById("editTextKeySelect").value;
+      const val = document.getElementById("editTextCustomVal").value.trim();
+      if (!val) return alert("Please enter custom text or use Reset Default.");
 
-    btn.innerText = targetRowId ? 'Updating...' : 'Saving...';
-    btn.disabled = true;
-
-    const entry = { date: dateFormatted, morning: m, noon: l, afternoon: s, night: d, other: otherData.text, total: total };
-    const payload = targetRowId
-      ? { action: 'update', rowId: targetRowId, entry: entry }
-      : { action: 'save', entry: entry };
-
-    try {
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
-      const result = await res.json();
-      if (result.status === 'success') {
-        showToast(targetRowId ? 'Day entry updated!' : 'Entry saved to cloud!');
-        await fetchData();
+      if (target === "client") {
+        clientCustomTexts[key] = val;
+        db.ref("config/customTexts/" + key).set(val);
+        alert("✅ Client App text updated live!");
       } else {
-        throw new Error(result.message);
+        adminCustomTexts[key] = val;
+        localStorage.setItem("hc_admin_texts", JSON.stringify(adminCustomTexts));
+        db.ref("config/adminCustomTexts/" + key).set(val);
+        applyAdminLanguage();
+        alert("✅ Admin App text updated!");
       }
-    } catch (err) {
-      showToast('Save failed: ' + err.message, 'error');
-    } finally {
-      btn.disabled = false;
-      loadEntryForSelectedDate();
     }
-  }
 
-  function openEdit(rowId) {
-    const item = rawData.find(r => r.rowId === rowId);
-    if (!item) return;
-
-    document.getElementById('editRowId').value = item.rowId;
-    document.getElementById('editDate').value = item.date;
-    document.getElementById('editM').value = item.morning === "-" ? "" : item.morning;
-    document.getElementById('editL').value = item.noon === "-" ? "" : item.noon;
-    document.getElementById('editS').value = item.afternoon === "-" ? "" : item.afternoon;
-    document.getElementById('editD').value = item.night === "-" ? "" : item.night;
-
-    const editCont = document.getElementById('editOthersContainer');
-    editCont.innerHTML = '';
-    if (item.other && item.other !== "-") {
-      item.other.split(',').forEach(p => addOtherInput('editOthersContainer', p.trim()));
-    } else {
-      addOtherInput('editOthersContainer');
-    }
-    document.getElementById('editModal').style.display = 'flex';
-  }
-
-  function closeModal() {
-    document.getElementById('editModal').style.display = 'none';
-  }
-
-  async function saveEdit() {
-    const btn = document.getElementById('updateModalBtn');
-    btn.innerText = 'Updating...';
-    btn.disabled = true;
-
-    const rowId = parseInt(document.getElementById('editRowId').value);
-    const date = document.getElementById('editDate').value;
-    const m = cleanItemText(document.getElementById('editM').value);
-    const l = cleanItemText(document.getElementById('editL').value);
-    const s = cleanItemText(document.getElementById('editS').value);
-    const d = cleanItemText(document.getElementById('editD').value);
-    const otherData = getDynamicOthers('editOthersContainer');
-
-    const total = extractAmount(m) + extractAmount(l) + extractAmount(s) + extractAmount(d) + otherData.total;
-    const entry = { date: date, morning: m, noon: l, afternoon: s, night: d, other: otherData.text, total: total };
-
-    try {
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'update', rowId: rowId, entry: entry })
-      });
-      const result = await res.json();
-      if (result.status === 'success') {
-        closeModal();
-        showToast('Record updated!');
-        fetchData();
+    function resetCustomTextOverride() {
+      const target = document.getElementById("editTargetApp").value;
+      const key = document.getElementById("editTextKeySelect").value;
+      document.getElementById("editTextCustomVal").value = "";
+      if (target === "client") {
+        delete clientCustomTexts[key];
+        db.ref("config/customTexts/" + key).remove();
       } else {
-        throw new Error(result.message);
+        delete adminCustomTexts[key];
+        localStorage.setItem("hc_admin_texts", JSON.stringify(adminCustomTexts));
+        db.ref("config/adminCustomTexts/" + key).remove();
+        applyAdminLanguage();
       }
-    } catch (err) {
-      showToast('Update failed: ' + err.message, 'error');
-    } finally {
-      btn.innerText = 'Update';
-      btn.disabled = false;
+      alert("Reset to default!");
     }
-  }
 
-  async function deleteSingleRow(rowId) {
-    if (!confirm('Delete this expense record permanently?')) return;
-    try {
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'delete', rowId: rowId })
+    // ================= EXPENSE CALCULATION & ENTRY =================
+    function evalMathField(str) {
+      if (!str) return 0;
+      const matches = String(str).match(/[0-9]+(\.[0-9]+)?/g);
+      if (!matches) return 0;
+      return matches.reduce((sum, n) => sum + parseFloat(n), 0);
+    }
+
+    function recalcFormTotal() {
+      const m = evalMathField(document.getElementById("expMorning").value);
+      const n = evalMathField(document.getElementById("expNoon").value);
+      const a = evalMathField(document.getElementById("expAfternoon").value);
+      const nt = evalMathField(document.getElementById("expNight").value);
+      const o = evalMathField(document.getElementById("expOther").value);
+      const tot = Math.round(m + n + a + nt + o);
+      document.getElementById("liveFormTotal").textContent = "Total: ₹" + tot;
+      return tot;
+    }
+
+    function clearEntryForm() {
+      ["expMorning", "expNoon", "expAfternoon", "expNight", "expOther"].forEach(id => {
+        document.getElementById(id).value = "";
       });
-      const result = await res.json();
-      if (result.status === 'success') {
-        showToast('Record deleted');
-        fetchData();
-      }
-    } catch (err) {
-      showToast('Delete error: ' + err.message, 'error');
+      recalcFormTotal();
     }
-  }
 
-  async function deleteCurrentWeek(rowIds) {
-    if (!confirm('Delete all records for this active week?')) return;
-    try {
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'deleteWeek', rowIds: rowIds })
-      });
-      const result = await res.json();
-      if (result.status === 'success') {
-        showToast('Week records deleted');
-        fetchData();
-      }
-    } catch (err) {
-      showToast('Error: ' + err.message, 'error');
-    }
-  }
-
-  function clearFilters() {
-    document.getElementById('searchDate').value = '';
-    document.getElementById('searchText').value = '';
-    renderTable();
-  }
-
-  function getCalendarWeekRange(offset) {
-    const now = new Date();
-    const day = now.getDay();
-    const diffToMon = now.getDate() - day + (day === 0 ? -6 : 1) + (offset * 7);
-    const start = new Date(now.getFullYear(), now.getMonth(), diffToMon);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(start);
-    end.setDate(start.getDate() + 6);
-    end.setHours(23, 59, 59, 999);
-    return { start, end };
-  }
-
-  function formatDateShort(d) {
-    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-  }
-
-  function prevWeek() { weekOffset--; renderTable(); }
-  function nextWeek() { weekOffset++; renderTable(); }
-  function resetToCurrentWeek() { weekOffset = 0; clearFilters(); }
-
-  function renderTable() {
-    const tbody = document.getElementById('tableBody');
-    const centerBtn = document.getElementById('centerWeekBtn');
-    const weekDelCont = document.getElementById('weekDeleteContainer');
-    const sDate = document.getElementById('searchDate').value;
-    const sText = document.getElementById('searchText').value.toLowerCase().trim();
-
-    tbody.innerHTML = '';
-    const isSearchActive = sDate || sText;
-    let displayRows = [];
-
-    if (isSearchActive) {
-      let filtered = [...rawData];
-      if (sDate) {
-        const parts = sDate.split('-');
-        const targetDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-        filtered = filtered.filter(r => r.date.startsWith(targetDate));
-      }
-      if (sText) {
-        filtered = filtered.filter(r =>
-          r.date.toLowerCase().includes(sText) ||
-          r.morning.toLowerCase().includes(sText) ||
-          r.noon.toLowerCase().includes(sText) ||
-          r.afternoon.toLowerCase().includes(sText) ||
-          r.night.toLowerCase().includes(sText) ||
-          r.other.toLowerCase().includes(sText)
-        );
-      }
-      centerBtn.innerHTML = `<span style="font-size:12px; color:var(--primary); font-weight:700;">Results (${filtered.length})</span>`;
-      displayRows = filtered;
-    } else {
-      const range = getCalendarWeekRange(weekOffset);
-      const rangeText = `${formatDateShort(range.start)} - ${formatDateShort(range.end)}`;
-      if (weekOffset === 0) {
-        centerBtn.innerHTML = `<strong style="font-size:12px; color:var(--primary);">Current Week</strong><br><small style="color:var(--muted); font-size:10px;">${rangeText}</small>`;
+    function loadDateIntoForm(specificDate) {
+      const d = specificDate || document.getElementById("expDate").value;
+      document.getElementById("expDate").value = d;
+      const found = expensesData.find(r => String(r.date).startsWith(d));
+      if (found) {
+        document.getElementById("expMorning").value = found.morning === "-" ? "" : found.morning;
+        document.getElementById("expNoon").value = found.noon === "-" ? "" : found.noon;
+        document.getElementById("expAfternoon").value = found.afternoon === "-" ? "" : found.afternoon;
+        document.getElementById("expNight").value = found.night === "-" ? "" : found.night;
+        document.getElementById("expOther").value = found.other === "-" ? "" : found.other;
       } else {
-        centerBtn.innerHTML = `<button class="back-pill" onclick="resetToCurrentWeek()">Current Week (${rangeText})</button>`;
+        clearEntryForm();
       }
-
-      displayRows = rawData.filter(r => {
-        const d = parseEntryDate(r.date);
-        return d >= range.start && d <= range.end;
-      });
+      recalcFormTotal();
     }
 
-    displayRows.sort((a, b) => parseEntryDate(a.date) - parseEntryDate(b.date));
-    currentActiveRows = displayRows;
+    async function saveDailyExpense() {
+      const date = document.getElementById("expDate").value;
+      if (!date) return alert("Select a date first!");
 
-    const now = new Date();
-    const monthTotal = rawData.reduce((acc, r) => {
-      const d = parseEntryDate(r.date);
-      return (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) ? acc + r.total : acc;
-    }, 0);
-    document.getElementById('statMonth').innerText = `₹${monthTotal}`;
-    updateBudgetUI(monthTotal);
+      const morning = document.getElementById("expMorning").value.trim() || "-";
+      const noon = document.getElementById("expNoon").value.trim() || "-";
+      const afternoon = document.getElementById("expAfternoon").value.trim() || "-";
+      const night = document.getElementById("expNight").value.trim() || "-";
+      const other = document.getElementById("expOther").value.trim() || "-";
+      const total = recalcFormTotal();
 
-    if (displayRows.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:18px; color:var(--muted);">No expense records found for this period.</td></tr>`;
-      updateStats(0, 0, 0);
-      weekDelCont.innerHTML = '';
-      return;
-    }
+      const payload = { date, morning, noon, afternoon, night, other, total };
 
-    let viewTotal = 0, maxExpense = 0;
-    let currentRowIds = [];
+      // 1. Instant local & Firebase mirror save (Zero Data Loss Guarantee)
+      const idx = expensesData.findIndex(r => String(r.date).startsWith(date));
+      if (idx >= 0) expensesData[idx] = payload;
+      else expensesData.unshift(payload);
 
-    displayRows.forEach(r => {
-      currentRowIds.push(r.rowId);
-      viewTotal += r.total;
-      if (r.total > maxExpense) maxExpense = r.total;
+      localStorage.setItem("hc_expenses_cache", JSON.stringify(expensesData));
+      db.ref("expenses_backup/" + date).set(payload);
+      renderExpenseList();
+      renderAnalytics();
+      updateAdminFuelMini();
 
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><span class="date-tag">${r.date}</span></td>
-        <td>${r.morning}</td>
-        <td>${r.noon}</td>
-        <td>${r.afternoon}</td>
-        <td>${r.night}</td>
-        <td>${r.other}</td>
-        <td><span class="amt-tag">₹${r.total}</span></td>
-        <td>
-          <button class="act-btn" style="background:rgba(168,85,247,0.18); color:#d8b4fe;" onclick="openEdit(${r.rowId})">✏️</button>
-          <button class="act-btn" style="background:rgba(251,113,133,0.16); color:var(--rose);" onclick="deleteSingleRow(${r.rowId})">🗑️</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-
-    if (displayRows.length > 0 && !isSearchActive) {
-      weekDelCont.innerHTML = `<button class="btn-del-wk" onclick='deleteCurrentWeek(${JSON.stringify(currentRowIds)})'>🗑️ Delete Week</button>`;
-    } else {
-      weekDelCont.innerHTML = '';
-    }
-
-    updateStats(viewTotal, displayRows.length, maxExpense);
-    if (document.getElementById('tab-analytics').classList.contains('active')) renderCharts();
-  }
-
-  function updateStats(total, count, max) {
-    document.getElementById('statTotal').innerText = `₹${total}`;
-    document.getElementById('statAvg').innerText = count > 0 ? `₹${Math.round(total / count)}` : '₹0';
-    document.getElementById('statEntries').innerText = `${count} Days`;
-    document.getElementById('statMax').innerText = `₹${max}`;
-  }
-
-  function setMonthlyBudget() {
-    const current = localStorage.getItem('campus_monthly_budget') || 4000;
-    const val = prompt("Enter Monthly Budget Limit (₹):", current);
-    if (val && !isNaN(val) && Number(val) > 0) {
-      localStorage.setItem('campus_monthly_budget', Number(val));
-      renderTable();
-      showToast(`Monthly budget set to ₹${val}`);
-    }
-  }
-
-  function updateBudgetUI(monthSpent) {
-    const limit = Number(localStorage.getItem('campus_monthly_budget')) || 4000;
-    const pct = Math.min((monthSpent / limit) * 100, 100);
-    const rem = Math.max(limit - monthSpent, 0);
-
-    const now = new Date();
-    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-    const daysLeft = Math.max(daysInMonth - now.getDate() + 1, 1);
-    const safeDaily = Math.round(rem / daysLeft);
-
-    const bar = document.getElementById('budgetBarFill');
-    bar.style.width = `${pct}%`;
-    bar.style.background = pct > 90 ? 'var(--rose)' : 'linear-gradient(90deg, #a855f7, #f59e0b)';
-
-    document.getElementById('budgetSpentLbl').innerText = `Spent: ₹${monthSpent}`;
-    document.getElementById('budgetLimitLbl').innerText = `Limit: ₹${limit}`;
-    document.getElementById('budgetRemLbl').innerText = `Remaining: ₹${rem}`;
-    document.getElementById('safeDailyLbl').innerText = `Safe Daily: ₹${safeDaily}/day`;
-  }
-
-  function renderCharts() {
-    let m = 0, l = 0, s = 0, d = 0, o = 0;
-    const labels = [];
-    const totals = [];
-
-    currentActiveRows.forEach(r => {
-      m += extractAmount(r.morning);
-      l += extractAmount(r.noon);
-      s += extractAmount(r.afternoon);
-      d += extractAmount(r.night);
-      o += extractAmount(r.other);
-      labels.push(r.date.split(' ')[0].slice(0, 5));
-      totals.push(r.total);
-    });
-
-    if (catChartInstance) catChartInstance.destroy();
-    catChartInstance = new Chart(document.getElementById('catChart'), {
-      type: 'doughnut',
-      data: {
-        labels: ['Morning', 'Lunch', 'Snacks', 'Dinner', 'Other'],
-        datasets: [{
-          data: [m, l, s, d, o],
-          backgroundColor: ['#38bdf8', '#10b981', '#f59e0b', '#a855f7', '#fb7185'],
-          borderWidth: 0
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'right', labels: { color: '#faf8ff', font: { size: 11 } } } }
-      }
-    });
-
-    if (trendChartInstance) trendChartInstance.destroy();
-    trendChartInstance = new Chart(document.getElementById('trendChart'), {
-      type: 'bar',
-      data: {
-        labels: labels.length ? labels : ['No Data'],
-        datasets: [{
-          label: 'Daily Spend (₹)',
-          data: totals.length ? totals : [0],
-          backgroundColor: '#f59e0b',
-          borderRadius: 6
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        scales: {
-          x: { ticks: { color: '#9e96b3', font: { size: 10 } }, grid: { display: false } },
-          y: { ticks: { color: '#9e96b3', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
-        },
-        plugins: { legend: { display: false } }
-      }
-    });
-  }
-
-  function shareWeeklyReport() {
-    if (currentActiveRows.length === 0) return showToast("No records in active week to share", "error");
-    let total = 0;
-    let lines = ["*🎓 Campus Expense Tracker - Weekly Summary*", ""];
-    currentActiveRows.forEach(r => {
-      total += r.total;
-      lines.push(`• ${r.date}: *₹${r.total}*`);
-    });
-    lines.push("", `*Total Spend: ₹${total}*`);
-    const text = lines.join("\n");
-
-    if (navigator.clipboard) navigator.clipboard.writeText(text);
-    const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    window.open(waUrl, '_blank');
-    showToast("Summary copied & opening WhatsApp...");
-  }
-
-  async function exportPDF() {
-    if (currentActiveRows.length === 0) {
-      return showToast("No records available to export", "error");
-    }
-
-    showToast("Generating PDF report...");
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-
-    doc.setFontSize(16);
-    doc.setTextColor(168, 85, 247);
-    doc.text("CAMPUS EXPENSE TRACKER - REPORT", 14, 18);
-
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Student: Ayan Karmakar | Generated: ${new Date().toLocaleDateString('en-IN')}`, 14, 25);
-
-    let grandTotal = 0;
-    const tableRows = currentActiveRows.map(r => {
-      grandTotal += r.total;
-      return [r.date, r.morning, r.noon, r.afternoon, r.night, r.other, `Rs. ${r.total}`];
-    });
-
-    tableRows.push(["", "", "", "", "", "TOTAL SPEND", `Rs. ${grandTotal}`]);
-
-    doc.autoTable({
-      startY: 32,
-      head: [['Date & Day', 'Morning', 'Noon', 'Afternoon', 'Night', 'Other', 'Total']],
-      body: tableRows,
-      theme: 'grid',
-      headStyles: { fillColor: [168, 85, 247], textColor: [255, 255, 255], fontStyle: 'bold' },
-      styles: { fontSize: 8, cellPadding: 3 },
-      didParseCell: function (data) {
-        if (data.row.index === tableRows.length - 1) {
-          data.cell.styles.fontStyle = 'bold';
-          data.cell.styles.fillColor = [250, 245, 255];
-        }
-      }
-    });
-
-    const fileName = `Campus_Expense_${getLocalTodayISO()}.pdf`;
-    const pdfBlob = doc.output('blob');
-    const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
-
-    if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+      // 2. Sync to Google Sheet
+      const statusEl = document.getElementById("syncStatusText");
+      statusEl.textContent = "⏳ Syncing to Sheet...";
       try {
-        await navigator.share({
-          files: [pdfFile],
-          title: 'Campus Expense Report',
-          text: 'Weekly Campus & Hostel Expense Report'
+        await fetch(window.APP_CONFIG.sheetApiUrl, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
         });
-        return;
-      } catch (err) {
-        console.log("Share cancelled:", err);
+        statusEl.textContent = "✅ Synced to Cloud & Sheet";
+        setTimeout(() => syncAllData(), 2000);
+      } catch (e) {
+        statusEl.textContent = "⚠️ Saved Locally & Firebase (Offline)";
       }
     }
 
-    doc.save(fileName);
-  }
-</script>
+    async function syncAllData() {
+      try {
+        const res = await fetch(window.APP_CONFIG.sheetApiUrl);
+        const raw = await res.json();
+        const clean = raw.filter(r => r.date && !String(r.date).includes("2099")).reverse();
+        if (clean.length > 0) {
+          expensesData = clean;
+          localStorage.setItem("hc_expenses_cache", JSON.stringify(expensesData));
+        }
+      } catch (e) {
+        const cached = localStorage.getItem("hc_expenses_cache");
+        if (cached) expensesData = JSON.parse(cached);
+      }
+      renderExpenseList();
+      renderAnalytics();
+      updateAdminFuelMini();
+    }
+
+    function renderExpenseList() {
+      const box = document.getElementById("adminExpenseList");
+      if (expensesData.length === 0) {
+        box.innerHTML = '<div style="font-size:12px; color:var(--muted); text-align:center; padding:16px;">No records yet</div>';
+        return;
+      }
+      box.innerHTML = expensesData.slice(0, 20).map(r => `
+        <div class="exp-row" onclick="loadDateIntoForm('${String(r.date).slice(0,10)}')" style="cursor:pointer;">
+          <div class="exp-info">
+            <h4>📅 ${r.date}</h4>
+            <p>M:${r.morning} | N:${r.noon} | A:${r.afternoon} | Nt:${r.night} | Oth:${r.other}</p>
+          </div>
+          <div class="exp-right">
+            <div class="exp-amt">₹${r.total || 0}</div>
+            <div style="font-size:10px; color:#a78bfa;">Edit ✎</div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    // ================= CUSTOMIZABLE SHORTCUTS =================
+    function renderShortcuts() {
+      const wrap = document.getElementById("shortcutChips");
+      wrap.innerHTML = shortcuts.map(sc => `
+        <button class="sc-chip" onclick="applyShortcut('${sc.id}')">+ ${sc.label}</button>
+      `).join("");
+
+      const mList = document.getElementById("modalShortcutList");
+      if (mList) {
+        mList.innerHTML = shortcuts.map(sc => `
+          <div class="exp-row">
+            <div>
+              <strong style="font-size:13px;">${sc.label}</strong>
+              <span style="font-size:11px; color:var(--muted); display:block;">₹${sc.amt} → ${sc.slot.replace('exp','')}</span>
+            </div>
+            <button class="pill-btn" style="color:#f87171;" onclick="deleteShortcut('${sc.id}')">🗑</button>
+          </div>
+        `).join("");
+      }
+    }
+
+    function applyShortcut(id) {
+      const sc = shortcuts.find(s => s.id === id);
+      if (!sc) return;
+      const inp = document.getElementById(sc.slot);
+      const cur = inp.value.trim();
+      inp.value = cur ? `${cur}+${sc.amt}` : `${sc.amt}`;
+      recalcFormTotal();
+    }
+
+    function openShortcutModal() {
+      renderShortcuts();
+      document.getElementById("shortcutModal").style.display = "flex";
+    }
+    function closeShortcutModal() {
+      document.getElementById("shortcutModal").style.display = "none";
+    }
+    function addCustomShortcut() {
+      const label = document.getElementById("newScLabel").value.trim();
+      const amt = Number(document.getElementById("newScAmt").value);
+      const slot = document.getElementById("newScSlot").value;
+      if (!label || !amt) return alert("Enter shortcut name and amount!");
+      shortcuts.push({ id: "sc_" + Date.now(), label, amt, slot });
+      localStorage.setItem("hc_shortcuts", JSON.stringify(shortcuts));
+      db.ref("config/shortcuts").set(shortcuts);
+      document.getElementById("newScLabel").value = "";
+      document.getElementById("newScAmt").value = "";
+      renderShortcuts();
+    }
+    function deleteShortcut(id) {
+      shortcuts = shortcuts.filter(s => s.id !== id);
+      localStorage.setItem("hc_shortcuts", JSON.stringify(shortcuts));
+      db.ref("config/shortcuts").set(shortcuts);
+      renderShortcuts();
+    }
+
+    // ================= BUDGET FUEL GAUGE & ANALYTICS =================
+    function saveBudgetCycle() {
+      const total = Number(document.getElementById("bTotalInput").value);
+      const days = Number(document.getElementById("bDaysInput").value) || 7;
+      const startDate = document.getElementById("bStartInput").value;
+      const note = document.getElementById("bNoteInput").value.trim();
+
+      if (!total || !startDate) return alert("Enter budget amount and start date!");
+
+      const bObj = { total, days, startDate, note, updatedAt: Date.now() };
+      db.ref("budget").set(bObj);
+      alert("✅ Live Fuel Gauge updated on all connected devices!");
+    }
+
+    function updateAdminFuelMini() {
+      if (!currentBudget || !currentBudget.total) return;
+      const total = Number(currentBudget.total);
+      const startObj = new Date(currentBudget.startDate + "T00:00:00");
+      let spent = 0;
+      expensesData.forEach(r => {
+        const dObj = new Date(String(r.date).slice(0,10) + "T00:00:00");
+        if (!isNaN(dObj) && dObj >= startObj) spent += Number(r.total) || 0;
+      });
+      const left = Math.max(0, total - spent);
+      const pct = Math.max(0, Math.min(100, Math.round((left / total) * 100)));
+
+      document.getElementById("miniFuelText").textContent = `₹${left} left / ₹${total} (${pct}%)`;
+      const fill = document.getElementById("miniFuelFill");
+      fill.style.width = pct + "%";
+      fill.style.background = pct > 70 ? "#10b981" : pct > 40 ? "#eab308" : pct > 20 ? "#f97316" : pct > 10 ? "#ef4444" : "#991b1b";
+    }
+
+    function renderAnalytics() {
+      const now = new Date();
+      const todayStr = now.toISOString().slice(0, 10);
+      let today = 0, week = 0, month = 0;
+
+      expensesData.forEach(r => {
+        const val = Number(r.total) || 0;
+        const dStr = String(r.date).slice(0, 10);
+        const dObj = new Date(dStr + "T00:00:00");
+        if (dStr === todayStr) today += val;
+        if (!isNaN(dObj)) {
+          const diff = (now - dObj) / (1000 * 60 * 60 * 24);
+          if (diff <= 7 && diff >= -1) week += val;
+          if (dObj.getMonth() === now.getMonth() && dObj.getFullYear() === now.getFullYear()) month += val;
+        }
+      });
+
+      document.getElementById("stToday").textContent = "₹" + today;
+      document.getElementById("stWeek").textContent = "₹" + week;
+      document.getElementById("stMonth").textContent = "₹" + month;
+
+      // Last 7 days bar chart
+      const chartBox = document.getElementById("weeklyChart");
+      const last7 = expensesData.slice(0, 7).reverse();
+      const maxVal = Math.max(100, ...last7.map(x => Number(x.total) || 0));
+      chartBox.innerHTML = last7.map(item => {
+        const val = Number(item.total) || 0;
+        const hPct = Math.max(6, Math.round((val / maxVal) * 100));
+        const shortDate = String(item.date).slice(5, 10);
+        return `
+          <div class="bar-col">
+            <div class="bar-val">₹${val}</div>
+            <div class="bar-fill" style="height:${hPct}%;"></div>
+            <div class="bar-lbl">${shortDate}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function shareWhatsApp() {
+      const recent = expensesData.slice(0, 7).map(r => `📅 ${r.date}: ₹${r.total}`).join("\n");
+      const text = `📊 *Campus Expense Summary*\n\n${recent}\n\n⛽ Budget Status: ${document.getElementById("miniFuelText").textContent}`;
+      window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
+    }
+
+    // ================= ALERT, CUSTOM AUDIO, VOLUME & LIVE STATUS =================
+    function setVolPreset(v) {
+      document.getElementById("alertVolumeSlider").value = v;
+      document.getElementById("volPctDisplay").textContent = v + "%";
+    }
+    function setAlertMsg(msg) {
+      document.getElementById("alertMsgInput").value = msg;
+    }
+
+    let activeAlertListener = null;
+
+    function sendPriorityRing() {
+      const target = document.getElementById("alertTargetSelect").value;
+      const msg = document.getElementById("alertMsgInput").value.trim() || "জরুরি দরকার! একটু কথা আছে।";
+      const volume = Number(document.getElementById("alertVolumeSlider").value);
+      const useCustomAudio = document.getElementById("useCustomAudioChk").checked;
+      const alertId = "al_" + Date.now();
+
+      const targetLabel = target === "ALL" ? "All Devices" : (connectedDevices[target]?.label || target);
+
+      const alertObj = {
+        id: alertId,
+        status: "active",
+        target,
+        msg,
+        volume,
+        useCustomAudio,
+        timestamp: Date.now()
+      };
+
+      db.ref("active_alert").set(alertObj);
+      db.ref("alert_history/" + alertId).set({
+        id: alertId,
+        msg,
+        target,
+        targetLabel,
+        volume,
+        timestamp: Date.now(),
+        finalStatus: "Sent"
+      });
+
+      trackAlertDelivery(alertId);
+    }
+
+    function stopActiveRing() {
+      db.ref("active_alert/status").set("stopped");
+    }
+
+    function trackAlertDelivery(alertId) {
+      const box = document.getElementById("liveDeliveryBox");
+      const list = document.getElementById("liveDeliveryList");
+      box.style.display = "block";
+      list.innerHTML = `<span class="status-pill st-sent">📤 Signal Dispatched... Waiting for device</span>`;
+
+      if (activeAlertListener) activeAlertListener.off();
+      activeAlertListener = db.ref("alert_status/" + alertId);
+      activeAlertListener.on("value", (snap) => {
+        const data = snap.val();
+        if (!data) return;
+        let html = "";
+        for (const [devId, info] of Object.entries(data)) {
+          const st = info.state;
+          const lbl = info.deviceLabel || devId;
+          if (st === "seen") {
+            html += `<div style="margin-bottom:5px;"><span class="status-pill st-seen">✅ ${lbl}: SEEN & STOPPED</span></div>`;
+            db.ref("alert_history/" + alertId + "/finalStatus").set("Seen by " + lbl);
+          } else if (st === "ringing") {
+            html += `<div style="margin-bottom:5px;"><span class="status-pill st-ringing">🔔 ${lbl}: RINGING NOW...</span></div>`;
+            db.ref("alert_history/" + alertId + "/finalStatus").set("Ringing on " + lbl);
+          }
+        }
+        if (html) list.innerHTML = html;
+      });
+    }
+
+    function uploadCustomAudio(input) {
+      const file = input.files[0];
+      if (!file) return;
+      if (file.size > 1.6 * 1024 * 1024) {
+        alert("File too large! Please choose an audio clip under 1.5 MB for fast instant ring.");
+        input.value = "";
+        return;
+      }
+      const targetDev = document.getElementById("audioDeviceSelect").value;
+      const reader = new FileReader();
+      reader.onload = async function (e) {
+        await db.ref("device_audio/" + targetDev).set({
+          name: file.name,
+          base64: e.target.result,
+          updatedAt: Date.now()
+        });
+        renderSavedAudioInfo();
+        alert("✅ Custom ringtone saved for selected device!");
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function renderSavedAudioInfo() {
+      const targetDev = document.getElementById("audioDeviceSelect").value;
+      const el = document.getElementById("savedAudioStatus");
+      const snap = await db.ref("device_audio/" + targetDev).once("value");
+      const val = snap.val();
+      if (val && val.name) {
+        el.innerHTML = `🎵 Active Audio: <strong style="color:#34d399;">${val.name}</strong> <button class="pill-btn" style="margin-left:8px; color:#f87171;" onclick="deleteCustomAudio('${targetDev}')">Remove</button>`;
+      } else {
+        el.textContent = "Using built-in default alert tone for this target.";
+      }
+    }
+
+    function deleteCustomAudio(targetDev) {
+      db.ref("device_audio/" + targetDev).remove().then(() => renderSavedAudioInfo());
+    }
+
+    function clearAlertHistory() {
+      if (confirm("Clear all alert history logs?")) {
+        db.ref("alert_history").remove();
+      }
+    }
+
+    // ================= DEVICE & PIN MANAGEMENT =================
+    function updateClientPin() {
+      const pin = document.getElementById("clientPinInput").value.trim();
+      if (!/^\d{4}$/.test(pin)) return alert("Enter an exact 4-digit numeric PIN!");
+      db.ref("config/accessCode").set(pin);
+      alert("✅ Client Access PIN updated to " + pin);
+    }
+
+    function kickDevice(devId, label) {
+      if (confirm(`Force logout "${label}"? They will need the 4-digit PIN to log back in.`)) {
+        db.ref("devices/" + devId + "/status").set("kicked");
+        setTimeout(() => db.ref("devices/" + devId).remove(), 2500);
+      }
+    }
+
+    // ================= AI MODE (GEMINI + IMAGE + VOICE + CHAT HISTORY) =================
+    let aiChats = JSON.parse(localStorage.getItem("hc_ai_chats") || "[]");
+    let activeChatId = localStorage.getItem("hc_active_chat") || null;
+    let pendingImageBase64 = null;
+    let pendingImageMime = null;
+    let autoSpeakAi = false;
+
+    function initAiChats() {
+      if (aiChats.length === 0) {
+        createNewAiChat(true);
+      } else {
+        if (!activeChatId || !aiChats.find(c => c.id === activeChatId)) {
+          activeChatId = aiChats[0].id;
+        }
+        renderActiveAiChat();
+      }
+    }
+
+    function saveAiChatsLocal() {
+      localStorage.setItem("hc_ai_chats", JSON.stringify(aiChats));
+      localStorage.setItem("hc_active_chat", activeChatId);
+    }
+
+    function createNewAiChat(silent) {
+      const newChat = {
+        id: "chat_" + Date.now(),
+        title: "Finance Chat " + (aiChats.length + 1),
+        messages: [
+          { role: "ai", text: "হ্যালো অয়ন! তোর সব খরচের হিসাব, বাজেট ফুয়েল আর অ্যালার্ট লগ আমার মনে আছে। যা খুশি জিজ্ঞেস কর, বা কোনো বিলের ছবি আপলোড কর!" }
+        ]
+      };
+      aiChats.unshift(newChat);
+      activeChatId = newChat.id;
+      saveAiChatsLocal();
+      if (!silent) renderActiveAiChat();
+    }
+
+    function openAiDrawer() {
+      const list = document.getElementById("aiChatHistoryList");
+      list.innerHTML = aiChats.map(c => `
+        <div class="chat-hist-item ${c.id === activeChatId ? 'active' : ''}">
+          <div style="flex:1; cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; font-weight:700;" onclick="selectAiChat('${c.id}')">
+            💬 ${c.title}
+          </div>
+          <button class="pill-btn" style="padding:3px 7px;" onclick="renameAiChat('${c.id}')">✎</button>
+          <button class="pill-btn" style="padding:3px 7px; color:#f87171;" onclick="deleteAiChat('${c.id}')">🗑</button>
+        </div>
+      `).join("");
+      document.getElementById("aiHistoryModal").style.display = "flex";
+    }
+
+    function closeAiDrawer() {
+      document.getElementById("aiHistoryModal").style.display = "none";
+    }
+
+    function selectAiChat(id) {
+      activeChatId = id;
+      saveAiChatsLocal();
+      renderActiveAiChat();
+      closeAiDrawer();
+    }
+
+    function renameAiChat(id) {
+      const c = aiChats.find(x => x.id === id);
+      if (!c) return;
+      const name = prompt("Rename chat:", c.title);
+      if (name && name.trim()) {
+        c.title = name.trim();
+        saveAiChatsLocal();
+        openAiDrawer();
+        renderActiveAiChat();
+      }
+    }
+
+    function deleteAiChat(id) {
+      if (!confirm("Delete this chat?")) return;
+      aiChats = aiChats.filter(x => x.id !== id);
+      if (aiChats.length === 0) createNewAiChat(true);
+      else if (activeChatId === id) activeChatId = aiChats[0].id;
+      saveAiChatsLocal();
+      openAiDrawer();
+      renderActiveAiChat();
+    }
+
+    function renderActiveAiChat() {
+      const chat = aiChats.find(c => c.id === activeChatId);
+      if (!chat) return;
+      document.getElementById("currentChatTitle").textContent = chat.title;
+      const box = document.getElementById("aiMessagesBox");
+      box.innerHTML = chat.messages.map(m => `
+        <div class="msg-bubble ${m.role === 'user' ? 'msg-user' : 'msg-ai'}">
+          ${m.image ? `<img src="${m.image}" class="msg-img" />` : ""}
+          <div>${m.text}</div>
+        </div>
+      `).join("");
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function handleAiImageSelect(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        pendingImageBase64 = e.target.result;
+        pendingImageMime = file.type || "image/jpeg";
+        document.getElementById("aiImgThumb").src = pendingImageBase64;
+        document.getElementById("aiImgName").textContent = file.name;
+        document.getElementById("aiImgPreviewWrap").style.display = "flex";
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearAiImage() {
+      pendingImageBase64 = null;
+      pendingImageMime = null;
+      document.getElementById("aiImageInput").value = "";
+      document.getElementById("aiImgPreviewWrap").style.display = "none";
+    }
+
+    function toggleAiVoiceReply() {
+      autoSpeakAi = !autoSpeakAi;
+      document.getElementById("ttsToggleBtn").textContent = autoSpeakAi ? "🔊" : "🔇";
+    }
+
+    function toggleVoiceInput() {
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRec) return alert("Voice recognition not supported in this browser.");
+      const rec = new SpeechRec();
+      rec.lang = adminLang === "bn" ? "bn-IN" : "en-IN";
+      const btn = document.getElementById("aiMicBtn");
+      btn.classList.add("recording");
+      rec.onresult = (e) => {
+        const transcript = e.results[0][0].transcript;
+        document.getElementById("aiPromptInput").value = transcript;
+        btn.classList.remove("recording");
+        sendAiMessage();
+      };
+      rec.onerror = () => btn.classList.remove("recording");
+      rec.onend = () => btn.classList.remove("recording");
+      rec.start();
+    }
+
+    async function sendAiMessage() {
+      const inp = document.getElementById("aiPromptInput");
+      const text = inp.value.trim();
+      if (!text && !pendingImageBase64) return;
+
+      const chat = aiChats.find(c => c.id === activeChatId);
+      const userImg = pendingImageBase64;
+      const userMime = pendingImageMime;
+
+      chat.messages.push({ role: "user", text: text || "Analyze this image", image: userImg });
+      if (chat.messages.length === 2 && text) {
+        chat.title = text.slice(0, 26);
+      }
+      inp.value = "";
+      clearAiImage();
+      renderActiveAiChat();
+
+      // Add typing indicator
+      chat.messages.push({ role: "ai", text: "⏳ Thinking..." });
+      renderActiveAiChat();
+
+      const financialContext = `
+You are Ayan's personal smart finance & system assistant inside HisabCloud Pro.
+Reply naturally, concisely, and accurately in the same language Ayan asks (Bengali or English).
+Current Budget Fuel Data: ${JSON.stringify(currentBudget || {})}
+Recent Expense Records (Latest 45 days): ${JSON.stringify(expensesData.slice(0, 45))}
+Connected Client Devices: ${JSON.stringify(Object.values(connectedDevices))}
+Today's Date: ${new Date().toISOString().slice(0, 10)}
+      `.trim();
+
+      const parts = [{ text: financialContext + "\n\nUser Question: " + (text || "Analyze this uploaded receipt/image and extract details.") }];
+      if (userImg) {
+        const rawB64 = userImg.split(",")[1];
+        parts.push({ inlineData: { mimeType: userMime, data: rawB64 } });
+      }
+
+      try {
+        const apiKey = window.APP_CONFIG.geminiApiKey;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contents: [{ parts }] })
+        });
+        const data = await res.json();
+        const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, couldn't generate a response right now.";
+
+        chat.messages[chat.messages.length - 1].text = reply;
+        saveAiChatsLocal();
+        renderActiveAiChat();
+
+        if (autoSpeakAi && "speechSynthesis" in window) {
+          const utter = new SpeechSynthesisUtterance(reply.replace(/[*#_]/g, ""));
+          utter.lang = /[\u0980-\u09FF]/.test(reply) ? "bn-IN" : "en-IN";
+          window.speechSynthesis.speak(utter);
+        }
+      } catch (e) {
+        chat.messages[chat.messages.length - 1].text = "⚠️ Network or API error. Check internet connection.";
+        renderActiveAiChat();
+      }
+    }
+
+    // ================= INITIALIZE ADMIN APP & REALTIME LISTENERS =================
+    let adminInitialized = false;
+    function initAdminApp() {
+      if (adminInitialized) return;
+      adminInitialized = true;
+
+      const today = new Date().toISOString().slice(0, 10);
+      document.getElementById("expDate").value = today;
+      document.getElementById("bStartInput").value = today;
+
+      applyAdminLanguage();
+      renderShortcuts();
+      initAiChats();
+      syncAllData();
+
+      // Listen to Firebase Config (PIN, Language, Custom Texts, Shortcuts)
+      db.ref("config").on("value", (snap) => {
+        const cfg = snap.val() || {};
+        if (cfg.accessCode) document.getElementById("clientPinInput").value = cfg.accessCode;
+        if (cfg.clientLang) document.getElementById("clientLangSelect").value = cfg.clientLang;
+        if (cfg.customTexts) clientCustomTexts = cfg.customTexts;
+        if (cfg.shortcuts && Array.isArray(cfg.shortcuts)) {
+          shortcuts = cfg.shortcuts;
+          localStorage.setItem("hc_shortcuts", JSON.stringify(shortcuts));
+          renderShortcuts();
+        }
+        populateTextKeyDropdown();
+      });
+
+      // Listen to Budget Fuel Data
+      db.ref("budget").on("value", (snap) => {
+        currentBudget = snap.val();
+        if (currentBudget) {
+          document.getElementById("bTotalInput").value = currentBudget.total || "";
+          document.getElementById("bDaysInput").value = currentBudget.days || 7;
+          if (currentBudget.startDate) document.getElementById("bStartInput").value = currentBudget.startDate;
+          document.getElementById("bNoteInput").value = currentBudget.note || "";
+        }
+        updateAdminFuelMini();
+      });
+
+      // Listen to Connected Devices
+      db.ref("devices").on("value", (snap) => {
+        connectedDevices = snap.val() || {};
+        const listEl = document.getElementById("connectedDevicesList");
+        const alertSel = document.getElementById("alertTargetSelect");
+        const audioSel = document.getElementById("audioDeviceSelect");
+
+        const prevAlertTarget = alertSel.value;
+        const prevAudioTarget = audioSel.value;
+
+        alertSel.innerHTML = '<option value="ALL">📢 All Connected Devices</option>';
+        audioSel.innerHTML = '<option value="ALL">All Devices (Default Custom)</option>';
+
+        const activeDevs = Object.values(connectedDevices).filter(d => d && d.status !== "kicked");
+        document.getElementById("deviceCountBadge").textContent = activeDevs.length + " Active";
+
+        if (activeDevs.length === 0) {
+          listEl.innerHTML = '<div style="font-size:12px; color:var(--muted);">No devices logged in yet.</div>';
+        } else {
+          listEl.innerHTML = activeDevs.map(d => {
+            const isOnline = d.lastSeen && (Date.now() - d.lastSeen < 90000);
+            const opt1 = document.createElement("option");
+            opt1.value = d.id;
+            opt1.textContent = `📱 ${d.label} (${d.model || "Android"})`;
+            alertSel.appendChild(opt1);
+
+            const opt2 = opt1.cloneNode(true);
+            audioSel.appendChild(opt2);
+
+            return `
+              <div class="exp-row">
+                <div>
+                  <strong style="font-size:13px;">📱 ${d.label}</strong>
+                  <span style="font-size:11px; color:${isOnline ? '#34d399' : '#94a3b8'}; display:block;">
+                    ${isOnline ? '● Online now' : '○ Last seen: ' + new Date(d.lastSeen || Date.now()).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} • ${d.model || ""}
+                  </span>
+                </div>
+                <button class="pill-btn" style="color:#f87171;" onclick="kickDevice('${d.id}', '${d.label}')">Kick</button>
+              </div>
+            `;
+          }).join("");
+        }
+
+        if (prevAlertTarget) alertSel.value = prevAlertTarget;
+        if (prevAudioTarget) audioSel.value = prevAudioTarget;
+        renderSavedAudioInfo();
+      });
+
+      // Listen to Alert History Log
+      db.ref("alert_history").limitToLast(15).on("value", (snap) => {
+        const raw = snap.val() || {};
+        const items = Object.values(raw).reverse();
+        const box = document.getElementById("alertHistoryList");
+        if (items.length === 0) {
+          box.innerHTML = '<div style="font-size:12px; color:var(--muted); text-align:center;">No alert history yet</div>';
+          return;
+        }
+        box.innerHTML = items.map(h => `
+          <div class="exp-row">
+            <div style="flex:1;">
+              <strong style="font-size:13px;">${h.msg}</strong>
+              <p style="font-size:11px; color:var(--muted); margin-top:2px;">
+                To: ${h.targetLabel || h.target} • Vol: ${h.volume ?? 100}% • ${new Date(h.timestamp).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})}
+              </p>
+            </div>
+            <span class="status-pill ${String(h.finalStatus).includes('Seen') ? 'st-seen' : 'st-ringing'}">${h.finalStatus || 'Sent'}</span>
+          </div>
+        `).join("");
+      });
+    }
+  </script>
 </body>
 </html>
