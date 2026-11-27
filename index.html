@@ -3,32 +3,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>HisabCloud Pro</title>
+  <title>Campus Expense Tracker</title>
   <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
   <script src="firebase-config.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <style>
     :root {
-      --bg: #090812;
-      --surface: #131122;
-      --surface-2: #1b1830;
-      --border: rgba(255, 255, 255, 0.08);
+      --bg: #0b0814;
+      --card: #151124;
+      --card-inner: #1d1831;
+      --border: rgba(255, 255, 255, 0.07);
       --text: #f8fafc;
       --muted: #94a3b8;
-      --primary: #8b5cf6;
-      --primary-2: #6366f1;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --danger: #ef4444;
+      --purple: #8b5cf6;
+      --purple-dark: #6d28d9;
+      --amber: #f59e0b;
+      --green: #10b981;
+      --red: #ef4444;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
       font-family: 'Plus Jakarta Sans', 'Hind Siliguri', sans-serif;
-      background: var(--bg);
+      background: radial-gradient(circle at top right, #1f1638 0%, var(--bg) 45%);
       color: var(--text);
       min-height: 100vh;
       overflow-x: hidden;
+    }
+
+    /* Privacy Masking */
+    body.privacy-on .sensitive-amt {
+      filter: blur(6px);
+      user-select: none;
     }
 
     /* ================= CALCULATOR LOCK SCREEN ================= */
@@ -42,15 +48,7 @@
       justify-content: flex-end;
       padding: 18px 16px 26px;
     }
-    .calc-brand {
-      position: absolute;
-      top: 18px;
-      left: 18px;
-      font-size: 13px;
-      color: #64748b;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
+    .calc-brand { position: absolute; top: 18px; left: 18px; font-size: 13px; color: #64748b; font-weight: 700; }
     .calc-display-box {
       background: #100e1c;
       border: 1px solid rgba(255,255,255,0.06);
@@ -59,49 +57,16 @@
       margin-bottom: 14px;
       text-align: right;
     }
-    .calc-expr {
-      font-size: 15px;
-      color: #94a3b8;
-      min-height: 22px;
-      word-break: break-all;
-    }
-    .calc-result {
-      font-size: 38px;
-      font-weight: 800;
-      color: #fff;
-      margin-top: 6px;
-      overflow-x: auto;
-    }
-    .calc-sci-row {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-    .calc-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-    }
+    .calc-expr { font-size: 15px; color: #94a3b8; min-height: 22px; word-break: break-all; }
+    .calc-result { font-size: 38px; font-weight: 800; color: #fff; margin-top: 6px; overflow-x: auto; }
+    .calc-sci-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 10px; }
+    .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
     .c-btn {
-      border: none;
-      border-radius: 16px;
-      padding: 15px 0;
-      font-size: 19px;
-      font-weight: 700;
-      background: #161426;
-      color: #f8fafc;
-      cursor: pointer;
-      transition: transform 0.08s, background 0.15s;
+      border: none; border-radius: 16px; padding: 15px 0; font-size: 19px; font-weight: 700;
+      background: #161426; color: #f8fafc; cursor: pointer;
     }
     .c-btn:active { transform: scale(0.95); background: #23203b; }
-    .c-sci {
-      padding: 10px 0;
-      font-size: 13px;
-      background: #110f1f;
-      color: #a78bfa;
-      border-radius: 12px;
-    }
+    .c-sci { padding: 10px 0; font-size: 13px; background: #110f1f; color: #a78bfa; border-radius: 12px; }
     .c-op { background: rgba(139, 92, 246, 0.18); color: #c4b5fd; }
     .c-ac { background: rgba(239, 68, 68, 0.18); color: #fca5a5; }
     .c-eq { background: linear-gradient(135deg, #8b5cf6, #6366f1); color: #fff; }
@@ -109,344 +74,308 @@
     /* ================= MAIN APP SHELL ================= */
     #appShell {
       display: none;
-      max-width: 520px;
+      max-width: 500px;
       margin: 0 auto;
-      padding: 12px 14px 92px;
+      padding: 14px 14px 92px;
     }
-    .topbar {
+
+    /* Original Top Header Card */
+    .header-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 12px 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 6px 2px 14px;
-      position: sticky;
-      top: 0;
-      background: rgba(9, 8, 18, 0.92);
-      backdrop-filter: blur(10px);
-      z-index: 50;
+      margin-bottom: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     }
-    .top-left { display: flex; align-items: center; gap: 10px; }
-    .app-icon {
-      width: 38px; height: 38px; border-radius: 12px;
-      background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+    .header-left { display: flex; align-items: center; gap: 11px; }
+    .grad-cap-box {
+      width: 42px; height: 42px; border-radius: 14px;
+      background: linear-gradient(135deg, #a855f7, #f59e0b);
       display: flex; align-items: center; justify-content: center;
-      font-size: 19px;
+      font-size: 20px; flex-shrink: 0;
     }
-    .top-left h1 { font-size: 16px; font-weight: 800; }
-    .top-left p { font-size: 11px; color: #34d399; font-weight: 600; }
-    .top-actions { display: flex; gap: 8px; align-items: center; }
-    .pill-btn {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      color: #e2e8f0;
-      padding: 7px 11px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
+    .header-left h1 { font-size: 15px; font-weight: 800; color: #fff; line-height: 1.2; }
+    .header-left p { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .header-actions { display: flex; gap: 7px; }
+    .hdr-icon-btn {
+      width: 36px; height: 36px; border-radius: 12px;
+      background: var(--card-inner); border: 1px solid var(--border);
+      color: #e2e8f0; font-size: 15px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
     }
+    .hdr-icon-btn:active { transform: scale(0.93); }
 
-    /* Cards & Inputs */
+    /* Cards */
     .card {
-      background: var(--surface);
+      background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 20px;
+      border-radius: 22px;
       padding: 16px;
       margin-bottom: 14px;
     }
-    .card-title {
-      font-size: 14px;
-      font-weight: 800;
-      margin-bottom: 12px;
+
+    /* Active Week Spend Summary Card (Screenshot 1) */
+    .week-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+    .micro-lbl { font-size: 10.5px; font-weight: 700; color: var(--muted); letter-spacing: 0.6px; text-transform: uppercase; }
+    .big-week-amt { font-size: 30px; font-weight: 800; color: #fff; margin-top: 2px; }
+    .daily-avg-amt { font-size: 18px; font-weight: 800; color: var(--amber); margin-top: 2px; text-align: right; }
+    .mini-stats-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+    }
+    .m-stat-box {
+      background: var(--card-inner);
+      border: 1px solid rgba(255,255,255,0.04);
+      border-radius: 15px;
+      padding: 10px 10px;
+    }
+    .m-stat-box .lbl { font-size: 10.5px; color: var(--muted); margin-bottom: 4px; }
+    .m-stat-box .val { font-size: 14px; font-weight: 800; }
+
+    /* Quick Campus Entry Card (Screenshot 1) */
+    .entry-hdr {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      color: #f1f5f9;
+      margin-bottom: 12px;
     }
-    .field-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    .inp-box { margin-bottom: 10px; }
-    .inp-box label {
-      display: block;
-      font-size: 11px;
-      color: var(--muted);
-      margin-bottom: 5px;
-      font-weight: 600;
-    }
-    .inp {
-      width: 100%;
-      background: #0c0a17;
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 12px;
-      padding: 11px 12px;
-      color: #fff;
-      font-size: 14px;
-      outline: none;
-      font-family: inherit;
-    }
-    .inp:focus { border-color: var(--primary); }
-    .btn {
-      width: 100%;
-      border: none;
-      border-radius: 14px;
-      padding: 13px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      color: #fff;
-      background: linear-gradient(135deg, var(--primary), var(--primary-2));
-      transition: opacity 0.15s;
-    }
-    .btn:active { opacity: 0.85; }
-    .btn-sm {
-      width: auto;
-      padding: 7px 12px;
-      font-size: 12px;
-      border-radius: 10px;
-    }
-    .btn-danger { background: linear-gradient(135deg, #ef4444, #b91c1c); }
-    .btn-success { background: linear-gradient(135deg, #10b981, #059669); }
-    .btn-outline {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid var(--border);
-      color: #e2e8f0;
-    }
+    .entry-hdr h2 { font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
+    .syntax-hint { font-size: 11px; color: var(--amber); font-weight: 700; }
 
-    /* Shortcuts Bar */
-    .shortcut-wrap {
+    .loaded-banner {
+      background: rgba(139, 92, 246, 0.16);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      border-radius: 13px;
+      padding: 9px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11.5px;
+      margin-bottom: 12px;
+    }
+    .loaded-banner span:first-child { color: #e9d5ff; font-weight: 600; }
+    .loaded-banner span:last-child { color: var(--muted); font-size: 10.5px; }
+
+    .sc-row {
       display: flex;
       flex-wrap: wrap;
       gap: 7px;
-      margin-bottom: 12px;
+      margin-bottom: 13px;
+      align-items: center;
     }
     .sc-chip {
-      background: rgba(139, 92, 246, 0.16);
-      border: 1px solid rgba(139, 92, 246, 0.35);
-      color: #ddd6fe;
-      padding: 6px 11px;
+      background: var(--card-inner);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #e2e8f0;
+      padding: 7px 11px;
       border-radius: 20px;
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 700;
       cursor: pointer;
     }
-    .sc-chip:active { transform: scale(0.95); }
+    .sc-chip:active { background: rgba(139, 92, 246, 0.3); }
 
-    /* Mini Fuel Gauge */
-    .mini-fuel-bar {
-      height: 10px;
-      background: #1e1b33;
-      border-radius: 10px;
-      overflow: hidden;
-      margin: 8px 0;
-    }
-    .mini-fuel-fill {
-      height: 100%;
-      background: #10b981;
-      transition: width 0.5s ease, background 0.4s ease;
-    }
-
-    /* Expense Rows */
-    .exp-row {
-      background: var(--surface-2);
-      border-radius: 14px;
-      padding: 12px;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-    }
-    .exp-info h4 { font-size: 13px; font-weight: 700; }
-    .exp-info p { font-size: 11px; color: var(--muted); margin-top: 3px; }
-    .exp-right { text-align: right; }
-    .exp-amt { font-size: 15px; font-weight: 800; color: #38bdf8; }
-
-    /* Chart Bars */
-    .chart-box {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      height: 135px;
-      gap: 8px;
-      padding-top: 16px;
-    }
-    .bar-col {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      height: 100%;
-      justify-content: flex-end;
-    }
-    .bar-val { font-size: 10px; color: #cbd5e1; margin-bottom: 4px; }
-    .bar-fill {
+    .field-lbl { display: block; font-size: 11.5px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+    .inp {
       width: 100%;
-      max-width: 28px;
-      background: linear-gradient(180deg, #a855f7, #6366f1);
-      border-radius: 8px 8px 4px 4px;
-      min-height: 4px;
-      transition: height 0.5s ease;
+      background: var(--card-inner);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 12px 13px;
+      color: #fff;
+      font-size: 13.5px;
+      font-family: inherit;
+      outline: none;
     }
-    .bar-lbl { font-size: 10px; color: var(--muted); margin-top: 5px; }
+    .inp:focus { border-color: var(--purple); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 11px; }
+    .mb-11 { margin-bottom: 11px; }
 
-    /* Alert Status & History */
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 11px;
+    .add-more-btn {
+      background: var(--card-inner);
+      border: 1px solid rgba(255,255,255,0.09);
+      color: #e2e8f0;
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-size: 12px;
       font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 14px;
+    }
+
+    .entry-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .day-total-val { font-size: 22px; font-weight: 800; color: var(--amber); margin-top: 2px; }
+    .update-entry-btn {
+      background: linear-gradient(135deg, #9333ea, #7c3aed);
+      color: #fff;
+      border: none;
+      border-radius: 16px;
+      padding: 13px 22px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(139, 92, 246, 0.35);
+    }
+    .update-entry-btn:active { transform: scale(0.97); }
+
+    /* ================= ANALYTICS TAB (Screenshot 2) ================= */
+    .budget-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .set-limit-btn {
+      background: var(--card-inner); border: 1px solid var(--border); color: #e2e8f0;
+      padding: 6px 12px; border-radius: 12px; font-size: 11.5px; font-weight: 700; cursor: pointer;
+    }
+    .prog-track {
+      height: 11px; background: var(--card-inner); border-radius: 10px; overflow: hidden; margin: 10px 0;
+    }
+    .prog-fill {
+      height: 100%; background: linear-gradient(90deg, #8b5cf6, #f59e0b); border-radius: 10px; transition: width 0.5s ease;
+    }
+    .donut-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      gap: 14px;
+      padding: 10px 0;
+    }
+    .legend-list { display: flex; flex-direction: column; gap: 9px; }
+    .leg-item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; color: #e2e8f0; }
+    .leg-dot { width: 16px; height: 9px; border-radius: 3px; }
+
+    /* ================= LEDGER TAB (Screenshots 3 & 4) ================= */
+    .week-nav-bar {
+      background: var(--card-inner);
+      border-radius: 15px;
+      padding: 9px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 12px 0;
+    }
+    .wk-btn {
+      background: rgba(255,255,255,0.06); border: none; color: #e2e8f0;
+      padding: 7px 12px; border-radius: 11px; font-size: 11.5px; font-weight: 700; cursor: pointer;
+    }
+    .table-scroll {
+      overflow-x: auto;
+      margin: 0 -6px;
+      padding: 0 6px;
+    }
+    table.ledger-tbl {
+      width: 100%;
+      min-width: 680px;
+      border-collapse: collapse;
+      font-size: 12.5px;
+    }
+    .ledger-tbl th {
+      text-align: left;
+      color: var(--muted);
+      font-weight: 600;
+      padding: 10px 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .ledger-tbl td {
+      padding: 12px 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      color: #f1f5f9;
+      vertical-align: middle;
+    }
+    .date-pill {
+      background: var(--card-inner);
+      padding: 6px 10px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 11.5px;
+      display: inline-block;
+      white-space: nowrap;
+    }
+    .tot-badge {
+      background: rgba(245, 158, 11, 0.16);
+      color: #fbbf24;
+      padding: 5px 10px;
+      border-radius: 10px;
+      font-weight: 800;
+      display: inline-block;
+    }
+    .act-btn {
+      width: 30px; height: 30px; border-radius: 9px; border: none; cursor: pointer; font-size: 13px;
+    }
+    .ledger-footer-btns {
+      display: grid;
+      grid-template-columns: 1fr 1.15fr 1fr;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .l-btn {
+      border: none; border-radius: 13px; padding: 11px 6px; font-size: 11.5px; font-weight: 700; cursor: pointer;
+    }
+
+    /* ================= ALERT & AI TABS ================= */
+    .btn-full {
+      width: 100%; border: none; border-radius: 14px; padding: 13px; font-size: 13.5px;
+      font-weight: 800; color: #fff; background: linear-gradient(135deg, #8b5cf6, #6366f1); cursor: pointer;
+    }
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px;
+      border-radius: 20px; font-size: 11px; font-weight: 700;
     }
     .st-sent { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
     .st-ringing { background: rgba(245, 158, 11, 0.25); color: #fcd34d; }
     .st-seen { background: rgba(16, 185, 129, 0.22); color: #6ee7b7; }
 
-    /* AI Chat Interface */
-    .ai-container {
-      display: flex;
-      flex-direction: column;
-      height: calc(100vh - 155px);
-      min-height: 440px;
+    .ai-box {
+      display: flex; flex-direction: column; height: calc(100vh - 175px); min-height: 410px;
     }
-    .ai-topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-      gap: 8px;
+    .ai-msgs {
+      flex: 1; overflow-y: auto; background: var(--card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 12px; display: flex; flex-direction: column; gap: 9px;
     }
-    .ai-chat-title {
-      font-size: 14px;
-      font-weight: 700;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 180px;
+    .bubble {
+      max-width: 86%; padding: 10px 13px; border-radius: 15px; font-size: 13px; line-height: 1.5; white-space: pre-wrap;
     }
-    .ai-messages {
-      flex: 1;
-      overflow-y: auto;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .msg-bubble {
-      max-width: 86%;
-      padding: 11px 14px;
-      border-radius: 16px;
-      font-size: 13.5px;
-      line-height: 1.5;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    .msg-user {
-      align-self: flex-end;
-      background: linear-gradient(135deg, #7c3aed, #4f46e5);
-      color: #fff;
-      border-bottom-right-radius: 4px;
-    }
-    .msg-ai {
-      align-self: flex-start;
-      background: var(--surface-2);
-      color: #f1f5f9;
-      border: 1px solid var(--border);
-      border-bottom-left-radius: 4px;
-    }
-    .msg-img {
-      max-width: 180px;
-      border-radius: 10px;
-      margin-bottom: 6px;
-      display: block;
-    }
-    .ai-input-bar {
-      margin-top: 10px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 8px;
-    }
-    .ai-preview-img {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      padding: 4px 8px 8px;
-      font-size: 12px;
-      color: #c4b5fd;
-    }
-    .ai-controls {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-    .icon-btn {
-      width: 38px;
-      height: 38px;
-      border-radius: 12px;
-      border: none;
-      background: var(--surface-2);
-      color: #e2e8f0;
-      font-size: 16px;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-    .icon-btn.recording { background: #ef4444; color: #fff; }
+    .b-user { align-self: flex-end; background: linear-gradient(135deg, #8b5cf6, #6366f1); color: #fff; }
+    .b-ai { align-self: flex-start; background: var(--card-inner); color: #f1f5f9; border: 1px solid var(--border); }
 
-    /* AI History Drawer */
-    #aiHistoryModal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.75);
-      z-index: 200;
-      justify-content: flex-start;
-    }
-    .drawer-panel {
-      width: 82%;
-      max-width: 320px;
-      background: #110f21;
-      height: 100%;
-      padding: 18px 14px;
-      overflow-y: auto;
-      border-right: 1px solid var(--border);
-    }
-    .chat-hist-item {
-      background: var(--surface-2);
-      padding: 10px 12px;
-      border-radius: 12px;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 6px;
-    }
-    .chat-hist-item.active { border: 1px solid var(--primary); }
-
-    /* Bottom Navigation */
+    /* Bottom Navigation Bar (Original Style) */
     .bottom-nav {
       position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: rgba(13, 11, 24, 0.96);
-      backdrop-filter: blur(12px);
-      border-top: 1px solid var(--border);
+      bottom: 8px;
+      left: 12px;
+      right: 12px;
+      max-width: 476px;
+      margin: 0 auto;
+      background: rgba(21, 17, 36, 0.96);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 24px;
       display: flex;
       justify-content: space-around;
-      padding: 8px 4px 12px;
+      padding: 6px;
       z-index: 100;
+      box-shadow: 0 12px 35px rgba(0,0,0,0.6);
     }
-    .nav-item {
+    .nav-btn {
+      flex: 1;
       background: none;
       border: none;
       color: var(--muted);
+      border-radius: 18px;
+      padding: 8px 4px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -454,41 +383,32 @@
       font-size: 11px;
       font-weight: 700;
       cursor: pointer;
-      padding: 4px 8px;
     }
-    .nav-item span:first-child { font-size: 18px; }
-    .nav-item.active { color: #a78bfa; }
+    .nav-btn span:first-child { font-size: 16px; }
+    .nav-btn.active {
+      background: rgba(245, 158, 11, 0.14);
+      color: var(--amber);
+    }
 
     .tab-pane { display: none; }
     .tab-pane.active { display: block; }
 
-    /* Modal */
-    .modal-backdrop {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.78);
-      z-index: 300;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
+    /* Modals */
+    .modal-bg {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+      z-index: 300; align-items: center; justify-content: center; padding: 14px;
     }
-    .modal-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 22px;
-      padding: 18px;
-      width: 100%;
-      max-width: 440px;
-      max-height: 85vh;
-      overflow-y: auto;
+    .modal-box {
+      background: var(--card); border: 1px solid var(--border); border-radius: 22px;
+      padding: 18px; width: 100%; max-width: 450px; max-height: 86vh; overflow-y: auto;
     }
 
     @media print {
       body { background: #fff; color: #000; }
-      #calcLockScreen, .bottom-nav, .topbar, .no-print { display: none !important; }
+      #calcLockScreen, .bottom-nav, .header-card, .no-print { display: none !important; }
       #appShell { display: block !important; padding: 0; }
       .card { border: 1px solid #ccc; background: #fff; color: #000; }
+      .ledger-tbl td, .ledger-tbl th { color: #000; border-color: #ccc; }
     }
   </style>
 </head>
@@ -539,338 +459,335 @@
     </div>
   </div>
 
-  <!-- ================= 2. MAIN ADMIN DASHBOARD ================= -->
+  <!-- ================= 2. MAIN CAMPUS EXPENSE TRACKER ================= -->
   <div id="appShell">
-    <div class="topbar">
-      <div class="top-left">
-        <div class="app-icon">⚡</div>
+    <!-- Top Header Card (Exact Match) -->
+    <div class="header-card">
+      <div class="header-left">
+        <div class="grad-cap-box">🎓</div>
         <div>
-          <h1 id="at_appTitle">HisabCloud Pro</h1>
-          <p id="syncStatusText">● Cloud & Firebase Ready</p>
+          <h1 id="at_appTitle">Campus Expense Tracker</h1>
+          <p id="at_appSub">Hostel & College Daily Log</p>
         </div>
       </div>
-      <div class="top-actions">
-        <button class="pill-btn" id="adminLangToggleBtn" onclick="toggleAdminLang()">EN / বাং</button>
-        <button class="pill-btn" onclick="lockApp()">🔒</button>
+      <div class="header-actions">
+        <button class="hdr-icon-btn" onclick="togglePrivacy()" title="Hide/Show Amounts">👁️</button>
+        <button class="hdr-icon-btn" onclick="openControlModal()" title="Devices, PIN & Language Control">🔑</button>
+        <button class="hdr-icon-btn" onclick="lockApp()" title="Lock App">🔒</button>
       </div>
     </div>
 
-    <!-- TAB 1: DAILY EXPENSE ENTRY & CUSTOM SHORTCUTS -->
+    <!-- ================= TAB 1: ENTRY ================= -->
     <div id="tab-entry" class="tab-pane active">
-      <!-- Live Fuel Mini Status -->
-      <div class="card" style="padding:13px 16px;">
-        <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:700;">
-          <span id="at_fuelMiniTitle">⛽ Active Budget Fuel</span>
-          <span id="miniFuelText" style="color:#34d399;">₹0 / ₹0 (100%)</span>
+      <!-- Active Week Spend Summary Card -->
+      <div class="card">
+        <div class="week-top-row">
+          <div>
+            <div class="micro-lbl" id="at_wkSpendLbl">ACTIVE WEEK SPEND</div>
+            <div class="big-week-amt sensitive-amt" id="wkSpendVal">₹0</div>
+          </div>
+          <div>
+            <div class="micro-lbl" style="text-align:right;" id="at_dailyAvgLbl">DAILY AVG</div>
+            <div class="daily-avg-amt sensitive-amt" id="wkAvgVal">₹0</div>
+          </div>
         </div>
-        <div class="mini-fuel-bar">
-          <div class="mini-fuel-fill" id="miniFuelFill" style="width:100%;"></div>
+        <div class="mini-stats-3">
+          <div class="m-stat-box">
+            <div class="lbl" id="at_loggedDaysLbl">Logged Days</div>
+            <div class="val" style="color:#a78bfa;" id="wkDaysVal">0 Days</div>
+          </div>
+          <div class="m-stat-box">
+            <div class="lbl" id="at_highestDayLbl">Highest Day</div>
+            <div class="val sensitive-amt" style="color:#f87171;" id="wkHighVal">₹0</div>
+          </div>
+          <div class="m-stat-box">
+            <div class="lbl" id="at_monthSpendLbl">Month Spend</div>
+            <div class="val sensitive-amt" style="color:#34d399;" id="monthSpendVal">₹0</div>
+          </div>
         </div>
       </div>
 
-      <!-- Entry Form -->
+      <!-- Quick Campus Entry Card -->
       <div class="card">
-        <div class="card-title">
-          <span id="at_entryTitle">📝 Daily Expense Entry</span>
-          <span id="liveFormTotal" style="color:#38bdf8; font-size:16px;">Total: ₹0</span>
+        <div class="entry-hdr">
+          <h2 id="at_quickEntryTitle">⚡ Quick Campus Entry</h2>
+          <span class="syntax-hint">Number + Space = ()</span>
+        </div>
+
+        <div class="loaded-banner">
+          <span id="loadedStatusText">✏️ Loaded — add/edit & update</span>
+          <span id="syncStateBadge">No Duplicate</span>
         </div>
 
         <!-- Customizable Quick Shortcuts -->
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-          <span style="font-size:11px; color:var(--muted); font-weight:600;" id="at_scLabel">⚡ Quick Shortcuts (Tap to Add)</span>
-          <button class="pill-btn" style="padding:3px 9px; font-size:11px;" onclick="openShortcutModal()">⚙️ Customize</button>
-        </div>
-        <div class="shortcut-wrap" id="shortcutChips"></div>
+        <div class="sc-row" id="shortcutContainer"></div>
 
-        <div class="inp-box">
-          <label id="at_dateLbl">Date</label>
-          <input type="date" id="expDate" class="inp" onchange="loadDateIntoForm()" />
+        <div class="mb-11">
+          <label class="field-lbl" id="at_dateFieldLbl">Date (Auto IST Sync — Loads Existing Log)</label>
+          <select id="dateSelectDropdown" class="inp" onchange="onDateDropdownChange(this.value)"></select>
+          <input type="date" id="customDatePicker" class="inp" style="display:none; margin-top:8px;" onchange="onCustomDatePicked(this.value)" />
         </div>
 
-        <div class="field-grid">
-          <div class="inp-box">
-            <label id="at_mornLbl">🌅 Morning (e.g. 20+10)</label>
-            <input type="text" id="expMorning" class="inp" placeholder="0" oninput="recalcFormTotal()" />
+        <div class="grid-2">
+          <div>
+            <label class="field-lbl" id="at_mornLbl">Morning</label>
+            <input type="text" id="inMorning" class="inp" placeholder="e.g. 5 (chop)" oninput="handleSmartInput(this)" />
           </div>
-          <div class="inp-box">
-            <label id="at_noonLbl">☀️ Noon</label>
-            <input type="text" id="expNoon" class="inp" placeholder="0" oninput="recalcFormTotal()" />
+          <div>
+            <label class="field-lbl" id="at_noonLbl">Noon</label>
+            <input type="text" id="inNoon" class="inp" placeholder="e.g. 50 (vat)" oninput="handleSmartInput(this)" />
           </div>
-          <div class="inp-box">
-            <label id="at_aftLbl">🌇 Afternoon</label>
-            <input type="text" id="expAfternoon" class="inp" placeholder="0" oninput="recalcFormTotal()" />
-          </div>
-          <div class="inp-box">
-            <label id="at_nightLbl">🌙 Night</label>
-            <input type="text" id="expNight" class="inp" placeholder="0" oninput="recalcFormTotal()" />
-          </div>
-        </div>
-        <div class="inp-box">
-          <label id="at_otherLbl">📦 Other / Mess / Travel</label>
-          <input type="text" id="expOther" class="inp" placeholder="0" oninput="recalcFormTotal()" />
         </div>
 
-        <div style="display:flex; gap:8px;">
-          <button class="btn" id="at_saveBtn" onclick="saveDailyExpense()">💾 Save & Sync to Cloud</button>
-          <button class="btn btn-outline btn-sm" onclick="clearEntryForm()">Clear</button>
+        <div class="grid-2">
+          <div>
+            <label class="field-lbl" id="at_aftLbl">Afternoon</label>
+            <input type="text" id="inAfternoon" class="inp" placeholder="e.g. 15 (Tea)" oninput="handleSmartInput(this)" />
+          </div>
+          <div>
+            <label class="field-lbl" id="at_nightLbl">Night</label>
+            <input type="text" id="inNight" class="inp" placeholder="e.g. 45 (Roti Tadka)" oninput="handleSmartInput(this)" />
+          </div>
         </div>
-      </div>
 
-      <!-- Recent History -->
-      <div class="card">
-        <div class="card-title">
-          <span id="at_histTitle">📅 Recent Records (Tap to Edit)</span>
-          <button class="pill-btn" onclick="syncAllData()">↻ Sync</button>
+        <div class="mb-11">
+          <label class="field-lbl" id="at_otherLbl">Other Expenses (Bus, Xerox, Lab)</label>
+          <input type="text" id="inOther" class="inp" placeholder="e.g. 60 (bus Bill)" oninput="handleSmartInput(this)" />
         </div>
-        <div id="adminExpenseList"></div>
-      </div>
-    </div>
 
-    <!-- TAB 2: STATS, BUDGET FUEL SETTER, SHARE & PDF -->
-    <div id="tab-stats" class="tab-pane">
-      <!-- Set Pocket Money / Budget Fuel Gauge -->
-      <div class="card">
-        <div class="card-title">
-          <span id="at_budgetSetTitle">⛽ Set Budget Fuel Gauge (Live on Client)</span>
-        </div>
-        <div class="field-grid">
-          <div class="inp-box">
-            <label id="at_bAmtLbl">Budget Amount (₹)</label>
-            <input type="number" id="bTotalInput" class="inp" placeholder="1500" />
-          </div>
-          <div class="inp-box">
-            <label id="at_bDaysLbl">For How Many Days</label>
-            <input type="number" id="bDaysInput" class="inp" placeholder="7" />
-          </div>
-        </div>
-        <div class="field-grid">
-          <div class="inp-box">
-            <label id="at_bStartLbl">Cycle Start Date</label>
-            <input type="date" id="bStartInput" class="inp" />
-          </div>
-          <div class="inp-box">
-            <label id="at_bNoteLbl">Note (Optional)</label>
-            <input type="text" id="bNoteInput" class="inp" placeholder="Weekly Mess + Pocket" />
-          </div>
-        </div>
-        <button class="btn btn-success" id="at_bSaveBtn" onclick="saveBudgetCycle()">🚀 Update Live Fuel Gauge</button>
-      </div>
+        <button class="add-more-btn" onclick="promptAddMoreItem()">+ Add More Item</button>
 
-      <!-- Summary & Weekly Chart -->
-      <div class="card">
-        <div class="card-title">
-          <span id="at_analyticsTitle">📊 Expense Analytics (Last 7 Days)</span>
-        </div>
-        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; text-align:center; margin-bottom:10px;">
-          <div style="background:var(--surface-2); padding:10px; border-radius:12px;">
-            <div style="font-size:11px; color:var(--muted);">Today</div>
-            <div style="font-size:15px; font-weight:800;" id="stToday">₹0</div>
+        <div class="entry-footer">
+          <div>
+            <div class="micro-lbl" id="at_dayTotalLbl">DAY TOTAL</div>
+            <div class="day-total-val sensitive-amt" id="dayTotalDisplay">₹0</div>
           </div>
-          <div style="background:var(--surface-2); padding:10px; border-radius:12px;">
-            <div style="font-size:11px; color:var(--muted);">7 Days</div>
-            <div style="font-size:15px; font-weight:800;" id="stWeek">₹0</div>
-          </div>
-          <div style="background:var(--surface-2); padding:10px; border-radius:12px;">
-            <div style="font-size:11px; color:var(--muted);">This Month</div>
-            <div style="font-size:15px; font-weight:800;" id="stMonth">₹0</div>
-          </div>
-        </div>
-        <div class="chart-box" id="weeklyChart"></div>
-      </div>
-
-      <!-- WhatsApp Share & PDF Export -->
-      <div class="card no-print">
-        <div class="card-title"><span id="at_exportTitle">📤 Share & Export Reports</span></div>
-        <div style="display:flex; gap:10px;">
-          <button class="btn btn-success" onclick="shareWhatsApp()">💬 WhatsApp Summary</button>
-          <button class="btn btn-outline" onclick="window.print()">📄 Export PDF</button>
+          <button class="update-entry-btn" id="at_updateBtn" onclick="saveCurrentEntry()">Update Entry →</button>
         </div>
       </div>
     </div>
 
-    <!-- TAB 3: PRIORITY ALERT, CUSTOM AUDIO, VOLUME & HISTORY -->
+    <!-- ================= TAB 2: ANALYTICS ================= -->
+    <div id="tab-analytics" class="tab-pane">
+      <!-- Monthly Budget Planner (Screenshot 2) -->
+      <div class="card">
+        <div class="budget-top">
+          <h3 style="font-size:15px; font-weight:800;">🎯 Monthly Budget Planner</h3>
+          <button class="set-limit-btn" onclick="promptMonthlyLimit()">Set Limit</button>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:700;">
+          <span>Spent: <span class="sensitive-amt" id="anMonthSpent">₹0</span></span>
+          <span style="color:var(--muted);">Limit: <span class="sensitive-amt" id="anMonthLimit">₹4000</span></span>
+        </div>
+        <div class="prog-track">
+          <div class="prog-fill" id="anMonthBar" style="width:0%;"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:12px;">
+          <span style="color:var(--muted);">Remaining: <span class="sensitive-amt" id="anMonthRem">₹0</span></span>
+          <span style="color:var(--amber); font-weight:700;">Safe Daily: <span class="sensitive-amt" id="anSafeDaily">₹0/day</span></span>
+        </div>
+      </div>
+
+      <!-- Live Pocket Money Fuel Gauge Controller (Syncs to Client App) -->
+      <div class="card">
+        <div class="budget-top">
+          <h3 style="font-size:15px; font-weight:800;">⛽ Client Pocket Money Fuel Meter</h3>
+          <span id="fuelLiveBadge" style="font-size:11px; color:#34d399; font-weight:800;">100% FULL</span>
+        </div>
+        <div class="grid-2">
+          <div>
+            <label class="field-lbl">Received Amount (₹)</label>
+            <input type="number" id="fuelTotalInp" class="inp" placeholder="1500" />
+          </div>
+          <div>
+            <label class="field-lbl">For How Many Days</label>
+            <input type="number" id="fuelDaysInp" class="inp" placeholder="7" />
+          </div>
+        </div>
+        <div class="grid-2">
+          <div>
+            <label class="field-lbl">Start Date</label>
+            <input type="date" id="fuelStartInp" class="inp" />
+          </div>
+          <div>
+            <label class="field-lbl">Note (Optional)</label>
+            <input type="text" id="fuelNoteInp" class="inp" placeholder="Mess + Pocket" />
+          </div>
+        </div>
+        <button class="btn-full" onclick="saveFuelGaugeBudget()">🚀 Update Live Fuel Gauge on Client</button>
+      </div>
+
+      <!-- Active Week Category Split (Donut Chart) -->
+      <div class="card">
+        <h3 style="font-size:15px; font-weight:800; margin-bottom:8px;">📊 Active Week Category Split</h3>
+        <div class="donut-wrap">
+          <canvas id="donutCanvas" width="165" height="165"></canvas>
+          <div class="legend-list">
+            <div class="leg-item"><span class="leg-dot" style="background:#38bdf8;"></span> Morning</div>
+            <div class="leg-item"><span class="leg-dot" style="background:#10b981;"></span> Lunch</div>
+            <div class="leg-item"><span class="leg-dot" style="background:#f59e0b;"></span> Snacks</div>
+            <div class="leg-item"><span class="leg-dot" style="background:#a855f7;"></span> Dinner</div>
+            <div class="leg-item"><span class="leg-dot" style="background:#fb7185;"></span> Other</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Daily Spend Trend (Bar Chart) -->
+      <div class="card">
+        <h3 style="font-size:15px; font-weight:800; margin-bottom:10px;">📈 Daily Spend Trend (Active Week)</h3>
+        <canvas id="barCanvas" width="420" height="200" style="width:100%; height:200px;"></canvas>
+      </div>
+    </div>
+
+    <!-- ================= TAB 3: LEDGER (Screenshots 3 & 4) ================= -->
+    <div id="tab-ledger" class="tab-pane">
+      <div class="card">
+        <div class="mb-11">
+          <label class="field-lbl">Filter by Date</label>
+          <select id="ledgerDateFilter" class="inp" onchange="renderLedgerTable()">
+            <option value="">All Dates</option>
+          </select>
+        </div>
+        <div class="mb-11">
+          <label class="field-lbl">Search Item</label>
+          <input type="text" id="ledgerSearchInp" class="inp" placeholder="Bus, Xerox, Rice..." oninput="renderLedgerTable()" />
+        </div>
+        <button class="set-limit-btn" style="padding:8px 16px;" onclick="resetLedgerFilters()">Reset</button>
+
+        <div class="week-nav-bar">
+          <button class="wk-btn" onclick="changeLedgerWeek(-1)">← Prev</button>
+          <div style="text-align:center;">
+            <div style="font-size:12px; font-weight:800; color:var(--amber);" id="ledgerWeekTitle">Current Week</div>
+            <div style="font-size:10.5px; color:var(--muted);" id="ledgerWeekRange"></div>
+          </div>
+          <button class="wk-btn" onclick="changeLedgerWeek(1)">Next →</button>
+        </div>
+
+        <div class="table-scroll">
+          <table class="ledger-tbl">
+            <thead>
+              <tr>
+                <th>Date & Day</th>
+                <th>Morning</th>
+                <th>Noon</th>
+                <th>Afternoon</th>
+                <th>Night</th>
+                <th>Other</th>
+                <th>Total</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="ledgerTableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="ledger-footer-btns no-print">
+          <button class="l-btn" style="background:rgba(239,68,68,0.18); color:#fca5a5;" onclick="deleteCurrentWeekLogs()">🗑️ Delete Week</button>
+          <button class="l-btn" style="background:rgba(16,185,129,0.2); color:#6ee7b7;" onclick="shareWeekWhatsApp()">📲 Share Summary</button>
+          <button class="l-btn" style="background:rgba(245,158,11,0.18); color:#fcd34d;" onclick="window.print()">🖨️ Export PDF</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= TAB 4: ALERT, VOLUME, CUSTOM AUDIO & HISTORY ================= -->
     <div id="tab-alert" class="tab-pane">
       <div class="card">
-        <div class="card-title">
-          <span id="at_alertSendTitle">🚨 Remote Priority Ring & Alert</span>
+        <div class="budget-top">
+          <h3 style="font-size:15px; font-weight:800;">🚨 Priority Ring & Alert Control</h3>
+          <button class="set-limit-btn" onclick="openControlModal()">📱 Devices</button>
         </div>
 
-        <div class="inp-box">
-          <label id="at_targetDevLbl">Select Target Device</label>
+        <div class="mb-11">
+          <label class="field-lbl">Target Device</label>
           <select id="alertTargetSelect" class="inp">
             <option value="ALL">📢 All Connected Devices</option>
           </select>
         </div>
 
-        <!-- Remote Volume Slider -->
-        <div class="inp-box">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <label style="margin:0;" id="at_volLbl">🔊 Remote Ring Volume</label>
-            <span id="volPctDisplay" style="font-size:13px; font-weight:800; color:#fbbf24;">100%</span>
+        <div class="mb-11">
+          <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:700; margin-bottom:6px;">
+            <span style="color:var(--muted);">🔊 Remote Sound Level</span>
+            <span id="volLblVal" style="color:var(--amber);">100%</span>
           </div>
-          <input type="range" id="alertVolumeSlider" min="0" max="100" value="100" style="width:100%; accent-color:#8b5cf6;" oninput="document.getElementById('volPctDisplay').textContent = this.value + '%'" />
-          <div style="display:flex; gap:6px; margin-top:6px;">
-            <button class="pill-btn" style="flex:1;" onclick="setVolPreset(0)">0% Vibrate</button>
-            <button class="pill-btn" style="flex:1;" onclick="setVolPreset(35)">35% Low</button>
-            <button class="pill-btn" style="flex:1;" onclick="setVolPreset(75)">75% Med</button>
-            <button class="pill-btn" style="flex:1;" onclick="setVolPreset(100)">100% Max</button>
-          </div>
+          <input type="range" id="volSlider" min="0" max="100" value="100" style="width:100%; accent-color:#8b5cf6;" oninput="document.getElementById('volLblVal').textContent=this.value+'%'" />
         </div>
 
-        <!-- Quick Presets -->
-        <div class="shortcut-wrap" style="margin-top:8px;">
-          <button class="sc-chip" onclick="setAlertMsg('জরুরি দরকার! একটু কল ব্যাক করুন।')">📞 Call Back</button>
-          <button class="sc-chip" onclick="setAlertMsg('বাজেট প্রায় শেষ! মেস খরচের টাকা প্রয়োজন।')">💰 Fund Needed</button>
-          <button class="sc-chip" onclick="setAlertMsg('অ্যাপে নতুন হিসাব আপডেট করা হয়েছে।')">📊 Check Update</button>
+        <div class="sc-row">
+          <button class="sc-chip" onclick="document.getElementById('alertMsgInp').value='জরুরি দরকার! একটু কল ব্যাক করুন।'">📞 Call Back</button>
+          <button class="sc-chip" onclick="document.getElementById('alertMsgInp').value='বাজেট প্রায় শেষ! মেস খরচের টাকা প্রয়োজন।'">💰 Fund Needed</button>
+          <button class="sc-chip" onclick="document.getElementById('alertMsgInp').value='নতুন হিসাব আপডেট করা হয়েছে।'">📊 Check Log</button>
         </div>
 
-        <div class="inp-box">
-          <label id="at_alertMsgLbl">Alert Message</label>
-          <input type="text" id="alertMsgInput" class="inp" placeholder="Write message to display on full screen..." />
-        </div>
-
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-          <input type="checkbox" id="useCustomAudioChk" checked style="width:16px; height:16px;" />
-          <label for="useCustomAudioChk" style="font-size:12px; color:#cbd5e1;">Use uploaded custom ringtone (if available for device)</label>
+        <div class="mb-11">
+          <label class="field-lbl">Message</label>
+          <input type="text" id="alertMsgInp" class="inp" placeholder="Write priority message..." />
         </div>
 
         <div style="display:flex; gap:8px;">
-          <button class="btn btn-danger" id="at_ringBtn" onclick="sendPriorityRing()">🔔 RING NOW</button>
-          <button class="btn btn-outline btn-sm" onclick="stopActiveRing()">⏹ Stop</button>
+          <button class="btn-full" style="background:linear-gradient(135deg,#ef4444,#b91c1c);" onclick="triggerRemoteRing()">🔔 RING NOW</button>
+          <button class="set-limit-btn" style="padding:0 16px;" onclick="stopRemoteRing()">⏹ Stop</button>
         </div>
 
-        <!-- Real-Time Delivery & Seen Status Box -->
-        <div id="liveDeliveryBox" style="margin-top:14px; padding:12px; background:var(--surface-2); border-radius:14px; display:none;">
-          <div style="font-size:11px; color:var(--muted); font-weight:700; margin-bottom:6px;">📡 LIVE DELIVERY TRACKER</div>
-          <div id="liveDeliveryList"></div>
+        <div id="liveStatusBox" style="display:none; margin-top:12px; background:var(--card-inner); padding:11px; border-radius:14px;">
+          <div class="micro-lbl" style="margin-bottom:6px;">📡 REAL-TIME DELIVERY STATUS</div>
+          <div id="liveStatusItems"></div>
         </div>
       </div>
 
-      <!-- Per-Device Custom Audio Uploader -->
+      <!-- Custom Audio per Device -->
       <div class="card">
-        <div class="card-title"><span>🎵 Custom Ringtone per Device</span></div>
-        <div class="inp-box">
-          <label>Assign Audio To Device</label>
-          <select id="audioDeviceSelect" class="inp" onchange="renderSavedAudioInfo()">
-            <option value="ALL">All Devices (Default Custom)</option>
-          </select>
+        <h3 style="font-size:14px; font-weight:800; margin-bottom:10px;">🎵 Custom Alert Ringtone (Per Device)</h3>
+        <div class="mb-11">
+          <label class="field-lbl">Select Device for Audio</label>
+          <select id="audioDevSelect" class="inp" onchange="checkDeviceAudio()"></select>
         </div>
-        <div class="inp-box">
-          <label>Upload MP3 / Audio (Max 1.5 MB)</label>
-          <input type="file" id="customAudioFile" accept="audio/*" class="inp" onchange="uploadCustomAudio(this)" />
+        <div class="mb-11">
+          <label class="field-lbl">Upload MP3 / Audio (Max 1.5 MB)</label>
+          <input type="file" accept="audio/*" class="inp" onchange="uploadDeviceAudio(this)" />
         </div>
-        <div id="savedAudioStatus" style="font-size:12px; color:#94a3b8;">Checking saved audio...</div>
+        <div id="audioInfoTxt" style="font-size:11.5px; color:var(--muted);">Default ringtone active</div>
       </div>
 
       <!-- Alert & Request History Log -->
       <div class="card">
-        <div class="card-title">
-          <span id="at_alertHistTitle">📜 Alert & Request History Log</span>
-          <button class="pill-btn" onclick="clearAlertHistory()">Clear</button>
+        <div class="budget-top">
+          <h3 style="font-size:14px; font-weight:800;">📜 Alert & Request History</h3>
+          <button class="set-limit-btn" onclick="if(confirm('Clear history?')) db.ref('alert_history').remove()">Clear</button>
         </div>
-        <div id="alertHistoryList"></div>
+        <div id="alertHistoryBox"></div>
       </div>
     </div>
 
-    <!-- TAB 4: AI MODE (GEMINI ASSISTANT + IMAGE + VOICE + CHAT HISTORY) -->
+    <!-- ================= TAB 5: AI MODE ================= -->
     <div id="tab-ai" class="tab-pane">
-      <div class="ai-container">
-        <div class="ai-topbar">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <button class="pill-btn" onclick="openAiDrawer()">☰ Chats</button>
-            <div class="ai-chat-title" id="currentChatTitle">New Finance Chat</div>
+      <div class="ai-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:6px;">
+          <div style="display:flex; align-items:center; gap:7px;">
+            <button class="set-limit-btn" onclick="openChatDrawer()">☰ Chats</button>
+            <span id="aiActiveTitle" style="font-size:13.5px; font-weight:800; max-width:155px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Finance AI</span>
           </div>
           <div style="display:flex; gap:6px;">
-            <button class="pill-btn" id="ttsToggleBtn" onclick="toggleAiVoiceReply()" title="Auto Speak Replies">🔇</button>
-            <button class="pill-btn" onclick="createNewAiChat()">+ New</button>
+            <button class="set-limit-btn" id="aiSpeakToggle" onclick="toggleSpeakAi()">🔇</button>
+            <button class="set-limit-btn" onclick="newAiChat()">+ New</button>
           </div>
         </div>
 
-        <div class="ai-messages" id="aiMessagesBox"></div>
+        <div class="ai-msgs" id="aiChatBox"></div>
 
-        <div class="ai-input-bar">
-          <div class="ai-preview-img" id="aiImgPreviewWrap">
-            <img id="aiImgThumb" style="width:36px; height:36px; border-radius:8px; object-fit:cover;" />
-            <span id="aiImgName" style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">image.jpg</span>
-            <button class="pill-btn" style="padding:2px 7px;" onclick="clearAiImage()">✕</button>
+        <div class="card" style="margin:10px 0 0; padding:9px;">
+          <div id="aiImgBar" style="display:none; align-items:center; gap:8px; margin-bottom:7px; font-size:11.5px; color:#c4b5fd;">
+            <img id="aiThumb" style="width:34px; height:34px; border-radius:8px; object-fit:cover;" />
+            <span id="aiImgLbl" style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+            <button class="set-limit-btn" style="padding:2px 7px;" onclick="clearAiImg()">✕</button>
           </div>
-          <div class="ai-controls">
-            <label class="icon-btn" style="display:flex; align-items:center; justify-content:center;" title="Upload Bill/Image">
+          <div style="display:flex; gap:6px; align-items:center;">
+            <label class="hdr-icon-btn" style="cursor:pointer;">
               📎
-              <input type="file" id="aiImageInput" accept="image/*" style="display:none;" onchange="handleAiImageSelect(this)" />
+              <input type="file" id="aiFileInp" accept="image/*" style="display:none;" onchange="pickAiImg(this)" />
             </label>
-            <button class="icon-btn" id="aiMicBtn" onclick="toggleVoiceInput()" title="Voice Input">🎤</button>
-            <input type="text" id="aiPromptInput" class="inp" style="padding:9px 12px;" placeholder="Ask anything about expenses, budget or upload bill..." onkeydown="if(event.key==='Enter') sendAiMessage()" />
-            <button class="icon-btn" style="background:var(--primary); color:#fff;" onclick="sendAiMessage()">➤</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 5: CONTROL (4-DIGIT PIN, MULTI-DEVICE KICK, & LANGUAGE/TEXT EDITOR FOR BOTH APPS) -->
-    <div id="tab-control" class="tab-pane">
-      <!-- 4-Digit Client Access PIN -->
-      <div class="card">
-        <div class="card-title"><span id="at_pinCtrlTitle">🔐 Client App 4-Digit Access PIN</span></div>
-        <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">
-          New devices need this 4-digit PIN to log in. Already logged-in phones stay connected until you kick them.
-        </p>
-        <div style="display:flex; gap:8px;">
-          <input type="tel" id="clientPinInput" maxlength="4" class="inp" style="text-align:center; font-size:20px; font-weight:800; letter-spacing:8px;" placeholder="2007" />
-          <button class="btn btn-sm" onclick="updateClientPin()">Update PIN</button>
-        </div>
-      </div>
-
-      <!-- Connected Devices Manager -->
-      <div class="card">
-        <div class="card-title">
-          <span id="at_devMgrTitle">📱 Logged-In Devices</span>
-          <span id="deviceCountBadge" style="font-size:12px; color:#34d399;">0 Active</span>
-        </div>
-        <div id="connectedDevicesList"><div style="font-size:12px; color:var(--muted);">Loading devices...</div></div>
-      </div>
-
-      <!-- Universal Language & Text Customizer (BOTH APPS) -->
-      <div class="card">
-        <div class="card-title"><span id="at_langCtrlTitle">🌐 Language & Text Editor (Both Apps)</span></div>
-
-        <div class="field-grid" style="margin-bottom:12px;">
-          <div class="inp-box">
-            <label>Client App Language</label>
-            <select id="clientLangSelect" class="inp" onchange="saveClientLang(this.value)">
-              <option value="en">English (Default)</option>
-              <option value="bn">বাংলা (Bengali)</option>
-            </select>
-          </div>
-          <div class="inp-box">
-            <label>My Admin App Language</label>
-            <select id="adminLangSelect" class="inp" onchange="saveAdminLang(this.value)">
-              <option value="en">English</option>
-              <option value="bn">বাংলা (Bengali)</option>
-            </select>
-          </div>
-        </div>
-
-        <div style="border-top:1px solid var(--border); padding-top:12px; margin-top:4px;">
-          <div style="font-size:12px; font-weight:700; margin-bottom:8px; color:#c4b5fd;">✏️ Customize Any Label / Text Live</div>
-          <div class="inp-box">
-            <label>1. Choose App to Edit</label>
-            <select id="editTargetApp" class="inp" onchange="populateTextKeyDropdown()">
-              <option value="client">Client App (Campus Expense Live)</option>
-              <option value="admin">My Admin App (HisabCloud Pro)</option>
-            </select>
-          </div>
-          <div class="inp-box">
-            <label>2. Choose Label / Section</label>
-            <select id="editTextKeySelect" class="inp" onchange="loadSelectedTextVal()"></select>
-          </div>
-          <div class="inp-box">
-            <label>3. Custom Text (English or বাংলা)</label>
-            <input type="text" id="editTextCustomVal" class="inp" placeholder="Type custom text..." />
-          </div>
-          <div style="display:flex; gap:8px;">
-            <button class="btn btn-sm" style="flex:1;" onclick="saveCustomTextOverride()">✅ Apply Text Live</button>
-            <button class="btn btn-outline btn-sm" onclick="resetCustomTextOverride()">Reset Default</button>
+            <button class="hdr-icon-btn" id="aiVoiceBtn" onclick="startAiVoice()">🎤</button>
+            <input type="text" id="aiTextInp" class="inp" style="padding:10px;" placeholder="Ask about expenses, budget, or upload bill..." onkeydown="if(event.key==='Enter') askGemini()" />
+            <button class="hdr-icon-btn" style="background:var(--purple); color:#fff;" onclick="askGemini()">➤</button>
           </div>
         </div>
       </div>
@@ -878,96 +795,157 @@
 
     <!-- Bottom Navigation -->
     <div class="bottom-nav no-print">
-      <button class="nav-item active" onclick="switchTab('entry', this)"><span>📝</span><span id="nav_entry">Entry</span></button>
-      <button class="nav-item" onclick="switchTab('stats', this)"><span>📊</span><span id="nav_stats">Stats</span></button>
-      <button class="nav-item" onclick="switchTab('alert', this)"><span>🔔</span><span id="nav_alert">Alert</span></button>
-      <button class="nav-item" onclick="switchTab('ai', this)"><span>✨</span><span id="nav_ai">AI Mode</span></button>
-      <button class="nav-item" onclick="switchTab('control', this)"><span>⚙️</span><span id="nav_control">Control</span></button>
+      <button class="nav-btn active" onclick="goTab('entry', this)"><span>⚡</span><span id="nav_entry">Entry</span></button>
+      <button class="nav-btn" onclick="goTab('analytics', this)"><span>📊</span><span id="nav_analytics">Analytics</span></button>
+      <button class="nav-btn" onclick="goTab('ledger', this)"><span>📒</span><span id="nav_ledger">Ledger</span></button>
+      <button class="nav-btn" onclick="goTab('alert', this)"><span>🔔</span><span id="nav_alert">Alert</span></button>
+      <button class="nav-btn" onclick="goTab('ai', this)"><span>✨</span><span id="nav_ai">AI Mode</span></button>
     </div>
   </div>
 
-  <!-- AI Chat History Drawer -->
-  <div id="aiHistoryModal" onclick="if(event.target===this) closeAiDrawer()">
-    <div class="drawer-panel">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-        <h3 style="font-size:16px; font-weight:800;">💬 Chat History</h3>
-        <button class="pill-btn" onclick="createNewAiChat(); closeAiDrawer();">+ New</button>
+  <!-- ================= MODALS ================= -->
+  <!-- 1. Control Modal (4-Digit PIN, Devices Kick, Language & Text Customizer for Both Apps) -->
+  <div class="modal-bg" id="controlModal" onclick="if(event.target===this) closeControlModal()">
+    <div class="modal-box">
+      <div class="budget-top">
+        <h3 style="font-size:16px; font-weight:800;">🔑 Device, Security & Language</h3>
+        <button class="set-limit-btn" onclick="closeControlModal()">✕</button>
       </div>
-      <div id="aiChatHistoryList"></div>
+
+      <div class="mb-11">
+        <label class="field-lbl">Client App 4-Digit Login PIN</label>
+        <div style="display:flex; gap:8px;">
+          <input type="tel" id="ctrlPinInp" maxlength="4" class="inp" style="text-align:center; font-size:18px; font-weight:800; letter-spacing:8px;" placeholder="2007" />
+          <button class="update-entry-btn" style="padding:10px 16px;" onclick="saveNewClientPin()">Save PIN</button>
+        </div>
+      </div>
+
+      <div class="mb-11">
+        <label class="field-lbl">Connected Client Devices (Remote Logout)</label>
+        <div id="ctrlDeviceList"></div>
+      </div>
+
+      <div style="border-top:1px solid var(--border); padding-top:12px; margin-top:10px;">
+        <h4 style="font-size:13px; font-weight:800; color:#c4b5fd; margin-bottom:8px;">🌐 Language & Text Editor (Both Apps)</h4>
+        <div class="grid-2">
+          <div>
+            <label class="field-lbl">Client App Language</label>
+            <select id="ctrlClientLang" class="inp" onchange="db.ref('config/clientLang').set(this.value)">
+              <option value="en">English</option>
+              <option value="bn">বাংলা (Bengali)</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-lbl">My App Language</label>
+            <select id="ctrlAdminLang" class="inp" onchange="setAdminLang(this.value)">
+              <option value="en">English</option>
+              <option value="bn">বাংলা (Bengali)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mb-11">
+          <label class="field-lbl">Edit Text On App</label>
+          <select id="txtEditApp" class="inp" onchange="fillTextKeyOpts()">
+            <option value="client">Client App (Campus Expense Live)</option>
+            <option value="admin">My App (Campus Expense Tracker)</option>
+          </select>
+        </div>
+        <div class="mb-11">
+          <label class="field-lbl">Select Label</label>
+          <select id="txtEditKey" class="inp" onchange="loadKeyCurrentVal()"></select>
+        </div>
+        <div class="mb-11">
+          <label class="field-lbl">Custom Text</label>
+          <input type="text" id="txtEditVal" class="inp" placeholder="Type new label text..." />
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-full" style="padding:10px;" onclick="applyTextCustom()">Apply Live</button>
+          <button class="set-limit-btn" onclick="resetTextCustom()">Reset</button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Shortcut Customizer Modal -->
-  <div class="modal-backdrop" id="shortcutModal" onclick="if(event.target===this) closeShortcutModal()">
-    <div class="modal-card">
-      <div class="card-title">
-        <span>⚡ Customize Quick Shortcuts</span>
-        <button class="pill-btn" onclick="closeShortcutModal()">✕</button>
+  <!-- 2. Shortcut Customizer Modal -->
+  <div class="modal-bg" id="scModal" onclick="if(event.target===this) document.getElementById('scModal').style.display='none'">
+    <div class="modal-box">
+      <div class="budget-top">
+        <h3 style="font-size:15px; font-weight:800;">⚡ Customize Quick Shortcuts</h3>
+        <button class="set-limit-btn" onclick="document.getElementById('scModal').style.display='none'">✕</button>
       </div>
-      <div class="field-grid">
-        <div class="inp-box">
-          <label>Label (e.g. Tea 10)</label>
-          <input type="text" id="newScLabel" class="inp" placeholder="Breakfast 20" />
+      <div class="grid-2">
+        <div>
+          <label class="field-lbl">Label (e.g. ₹20 Breakfast)</label>
+          <input type="text" id="scNewLbl" class="inp" placeholder="₹20 Breakfast" />
         </div>
-        <div class="inp-box">
-          <label>Amount (₹)</label>
-          <input type="number" id="newScAmt" class="inp" placeholder="20" />
+        <div>
+          <label class="field-lbl">Entry Text (e.g. 20(Breakfast))</label>
+          <input type="text" id="scNewVal" class="inp" placeholder="20(Breakfast)" />
         </div>
       </div>
-      <div class="inp-box">
-        <label>Target Slot</label>
-        <select id="newScSlot" class="inp">
-          <option value="expMorning">🌅 Morning</option>
-          <option value="expNoon">☀️ Noon</option>
-          <option value="expAfternoon">🌇 Afternoon</option>
-          <option value="expNight">🌙 Night</option>
-          <option value="expOther">📦 Other</option>
+      <div class="mb-11">
+        <label class="field-lbl">Target Field</label>
+        <select id="scNewField" class="inp">
+          <option value="inMorning">Morning</option>
+          <option value="inNoon">Noon</option>
+          <option value="inAfternoon">Afternoon</option>
+          <option value="inNight">Night</option>
+          <option value="inOther">Other</option>
         </select>
       </div>
-      <button class="btn btn-sm" style="width:100%; margin-bottom:14px;" onclick="addCustomShortcut()">+ Add Shortcut</button>
-      <div id="modalShortcutList"></div>
+      <button class="btn-full" style="margin-bottom:12px;" onclick="addNewShortcut()">+ Add Shortcut</button>
+      <div id="scModalList"></div>
+    </div>
+  </div>
+
+  <!-- 3. AI Chat History Modal -->
+  <div class="modal-bg" id="chatHistModal" onclick="if(event.target===this) document.getElementById('chatHistModal').style.display='none'">
+    <div class="modal-box">
+      <div class="budget-top">
+        <h3 style="font-size:15px; font-weight:800;">💬 AI Chat History</h3>
+        <button class="set-limit-btn" onclick="newAiChat(); document.getElementById('chatHistModal').style.display='none'">+ New Chat</button>
+      </div>
+      <div id="chatHistItems"></div>
     </div>
   </div>
 
   <script>
-    // ================= INITIALIZE FIREBASE =================
     firebase.initializeApp(window.APP_CONFIG.firebaseConfig);
     const db = firebase.database();
 
     // ================= SCIENTIFIC CALCULATOR LOCK =================
-    let calcString = "";
-    function calcInput(val) {
-      calcString += val;
-      document.getElementById("calcExpr").textContent = calcString.replace(/Math\./g, "");
+    let calcExpr = "";
+    function calcInput(v) {
+      calcExpr += v;
+      document.getElementById("calcExpr").textContent = calcExpr.replace(/Math\./g, "");
     }
     function calcClear() {
-      calcString = "";
+      calcExpr = "";
       document.getElementById("calcExpr").textContent = "";
       document.getElementById("calcRes").textContent = "0";
     }
     function calcDel() {
-      calcString = calcString.slice(0, -1);
-      document.getElementById("calcExpr").textContent = calcString.replace(/Math\./g, "");
+      calcExpr = calcExpr.slice(0, -1);
+      document.getElementById("calcExpr").textContent = calcExpr.replace(/Math\./g, "");
     }
     function calcEvaluate() {
-      const clean = calcString.trim();
-      if (clean === "2007") {
+      if (calcExpr.trim() === "2007") {
         calcClear();
         document.getElementById("calcLockScreen").style.display = "none";
         document.getElementById("appShell").style.display = "block";
-        initAdminApp();
+        bootTracker();
         return;
       }
       try {
-        // Safe arithmetic evaluation
-        const expr = clean.replace(/\^/g, "**");
-        if (!/^[0-9+\-*/().%\sMathsincoqrtlgPI]+$/.test(expr)) throw new Error("Invalid");
-        const ans = Function('"use strict";return (' + expr + ')')();
-        document.getElementById("calcRes").textContent = Number.isFinite(ans) ? Number(ans.toFixed(6)) : "Error";
-        calcString = String(ans);
+        const clean = calcExpr.replace(/\^/g, "**");
+        if (!/^[0-9+\-*/().%\sMathsincoqrtlgPI]+$/.test(clean)) throw new Error();
+        const out = Function('"use strict";return (' + clean + ')')();
+        document.getElementById("calcRes").textContent = Number.isFinite(out) ? Number(out.toFixed(6)) : "Error";
+        calcExpr = String(out);
       } catch (e) {
         document.getElementById("calcRes").textContent = "Syntax Error";
-        calcString = "";
+        calcExpr = "";
       }
     }
     function lockApp() {
@@ -975,915 +953,912 @@
       document.getElementById("calcLockScreen").style.display = "flex";
     }
 
-    // ================= TAB NAVIGATION =================
-    function switchTab(tabName, btnEl) {
-      document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("active"));
-      document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
-      document.getElementById("tab-" + tabName).classList.add("active");
-      btnEl.classList.add("active");
+    // ================= IST DATE HELPERS (DD/MM/YYYY) =================
+    function getISTDateDDMMYYYY(offsetDays = 0) {
+      const now = new Date();
+      const istMs = now.getTime() + (5.5 * 60 * 60 * 1000) + (offsetDays * 86400000);
+      const d = new Date(istMs);
+      const dd = String(d.getUTCDate()).padStart(2, "0");
+      const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+      const yyyy = d.getUTCFullYear();
+      return `${dd}/${mm}/${yyyy}`;
     }
 
-    // ================= GLOBAL STATE =================
-    let expensesData = [];
-    let currentBudget = null;
-    let connectedDevices = {};
-    let adminLang = localStorage.getItem("hc_admin_lang") || "en";
-    let adminCustomTexts = JSON.parse(localStorage.getItem("hc_admin_texts") || "{}");
-    let clientCustomTexts = {};
-    let shortcuts = JSON.parse(localStorage.getItem("hc_shortcuts") || "null") || [
-      { id: "s1", label: "Breakfast ₹20", amt: 20, slot: "expMorning" },
-      { id: "s2", label: "Lunch ₹45", amt: 45, slot: "expNoon" },
-      { id: "s3", label: "Tea/Tiffin ₹15", amt: 15, slot: "expAfternoon" },
-      { id: "s4", label: "Dinner ₹40", amt: 40, slot: "expNight" }
-    ];
-
-    // ================= LANGUAGE & TEXT DICTIONARIES =================
-    const ADMIN_DICT = {
-      en: {
-        appTitle: "HisabCloud Pro",
-        fuelMiniTitle: "⛽ Active Budget Fuel",
-        entryTitle: "📝 Daily Expense Entry",
-        scLabel: "⚡ Quick Shortcuts (Tap to Add)",
-        dateLbl: "Date",
-        mornLbl: "🌅 Morning (e.g. 20+10)",
-        noonLbl: "☀️ Noon",
-        aftLbl: "🌇 Afternoon",
-        nightLbl: "🌙 Night",
-        otherLbl: "📦 Other / Mess / Travel",
-        saveBtn: "💾 Save & Sync to Cloud",
-        histTitle: "📅 Recent Records (Tap to Edit)",
-        budgetSetTitle: "⛽ Set Budget Fuel Gauge (Live on Client)",
-        bAmtLbl: "Budget Amount (₹)",
-        bDaysLbl: "For How Many Days",
-        bStartLbl: "Cycle Start Date",
-        bNoteLbl: "Note (Optional)",
-        bSaveBtn: "🚀 Update Live Fuel Gauge",
-        analyticsTitle: "📊 Expense Analytics (Last 7 Days)",
-        exportTitle: "📤 Share & Export Reports",
-        alertSendTitle: "🚨 Remote Priority Ring & Alert",
-        targetDevLbl: "Select Target Device",
-        volLbl: "🔊 Remote Ring Volume",
-        alertMsgLbl: "Alert Message",
-        ringBtn: "🔔 RING NOW",
-        alertHistTitle: "📜 Alert & Request History Log",
-        pinCtrlTitle: "🔐 Client App 4-Digit Access PIN",
-        devMgrTitle: "📱 Logged-In Devices",
-        langCtrlTitle: "🌐 Language & Text Editor (Both Apps)",
-        nav_entry: "Entry",
-        nav_stats: "Stats",
-        nav_alert: "Alert",
-        nav_ai: "AI Mode",
-        nav_control: "Control"
-      },
-      bn: {
-        appTitle: "HisabCloud Pro",
-        fuelMiniTitle: "⛽ বর্তমান বাজেট ফুয়েল",
-        entryTitle: "📝 দৈনিক খরচের এন্ট্রি",
-        scLabel: "⚡ কুইক শর্টকাট (ট্যাপ করলে যোগ হবে)",
-        dateLbl: "তারিখ",
-        mornLbl: "🌅 সকাল (যেমন 20+10)",
-        noonLbl: "☀️ দুপুর",
-        aftLbl: "🌇 বিকেল",
-        nightLbl: "🌙 রাত",
-        otherLbl: "📦 অন্যান্য / মেস / যাতায়াত",
-        saveBtn: "💾 সেভ ও ক্লাউড সিঙ্ক করুন",
-        histTitle: "📅 সাম্প্রতিক হিসাব (এডিট করতে ট্যাপ করুন)",
-        budgetSetTitle: "⛽ বাজেট ফুয়েল মিটার সেট করুন",
-        bAmtLbl: "মোট বাজেট (₹)",
-        bDaysLbl: "কত দিনের জন্য",
-        bStartLbl: "শুরুর তারিখ",
-        bNoteLbl: "নোট (ঐচ্ছিক)",
-        bSaveBtn: "🚀 লাইভ ফুয়েল মিটার আপডেট করুন",
-        analyticsTitle: "📊 খরচের গ্রাফ (গত ৭ দিন)",
-        exportTitle: "📤 রিপোর্ট শেয়ার ও PDF এক্সপোর্ট",
-        alertSendTitle: "🚨 রিমোট প্রায়োরিটি রিং ও অ্যালার্ট",
-        targetDevLbl: "ডিভাইস সিলেক্ট করুন",
-        volLbl: "🔊 রিমোট রিং ভলিউম",
-        alertMsgLbl: "অ্যালার্ট মেসেজ",
-        ringBtn: "🔔 এখনি রিং পাঠান",
-        alertHistTitle: "📜 অ্যালার্ট ও রিকোয়েস্ট হিস্ট্রি",
-        pinCtrlTitle: "🔐 ক্লায়েন্ট অ্যাপের ৪-ডিজিট পিন",
-        devMgrTitle: "📱 লগইন থাকা ডিভাইসসমূহ",
-        langCtrlTitle: "🌐 ভাষা ও টেক্সট এডিটর (দুই অ্যাপের জন্য)",
-        nav_entry: "এন্ট্রি",
-        nav_stats: "হিসাব",
-        nav_alert: "অ্যালার্ট",
-        nav_ai: "AI মোড",
-        nav_control: "কন্ট্রোল"
+    function normalizeToDDMMYYYY(rawDate) {
+      if (!rawDate) return "";
+      const s = String(rawDate).trim();
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return s;
+      if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
+        const [d, m, y] = s.split("/");
+        return `${d.padStart(2, "0")}/${m.padStart(2, "0")}/${y}`;
       }
-    };
-
-    const CLIENT_TEXT_KEYS = {
-      loginTitle: "Login Screen Title",
-      loginSub: "Login Subtitle",
-      devLabel: "Device Name Label",
-      pinLabel: "4-Digit PIN Label",
-      loginBtn: "Login Button Text",
-      appTitle: "Client Header Title",
-      liveStatus: "Live Status Subtitle",
-      alertHeader: "Alert Banner Header",
-      fuelTitle: "Fuel Gauge Card Title",
-      lblTotal: "Allocated Budget Label",
-      lblSpent: "Spent Label",
-      lblLeft: "Remaining Label",
-      stHigh: "Fuel High Badge (>70%)",
-      stMid: "Fuel Moderate Badge (40-70%)",
-      stLow: "Fuel Low Badge (20-40%)",
-      stCrit: "Fuel Near Empty Badge (10-20%)",
-      stEmpty: "Fuel Critical Badge (<10%)",
-      sumToday: "Today Summary Label",
-      sumWeek: "Last 7 Days Label",
-      sumMonth: "This Month Label",
-      logTitle: "Daily Expense List Title"
-    };
-
-    function applyAdminLanguage() {
-      const dict = ADMIN_DICT[adminLang] || ADMIN_DICT.en;
-      for (const key of Object.keys(dict)) {
-        const el = document.getElementById(key.startsWith("nav_") ? key : "at_" + key);
-        if (el) {
-          el.textContent = adminCustomTexts[key] || dict[key];
-        }
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+        const [y, m, d] = s.split("-");
+        return `${d}/${m}/${y}`;
       }
-      document.getElementById("adminLangSelect").value = adminLang;
-      document.getElementById("adminLangToggleBtn").textContent = adminLang === "en" ? "🌐 বাং" : "🌐 EN";
-    }
-
-    function toggleAdminLang() {
-      saveAdminLang(adminLang === "en" ? "bn" : "en");
-    }
-
-    function saveAdminLang(lang) {
-      adminLang = lang;
-      localStorage.setItem("hc_admin_lang", lang);
-      applyAdminLanguage();
-    }
-
-    function saveClientLang(lang) {
-      db.ref("config/clientLang").set(lang);
-      alert("Client App language updated to " + (lang === "en" ? "English" : "বাংলা"));
-    }
-
-    function populateTextKeyDropdown() {
-      const target = document.getElementById("editTargetApp").value;
-      const sel = document.getElementById("editTextKeySelect");
-      sel.innerHTML = "";
-      const keysObj = target === "client" ? CLIENT_TEXT_KEYS : ADMIN_DICT.en;
-      for (const [k, desc] of Object.entries(keysObj)) {
-        const opt = document.createElement("option");
-        opt.value = k;
-        opt.textContent = target === "client" ? `${desc} (${k})` : `${k} — ${desc}`;
-        sel.appendChild(opt);
+      // Handle Google Sheets UTC ISO string (e.g. 2026-11-26T18:30:00.000Z -> 27/11/2026 IST)
+      const parsed = new Date(s);
+      if (!isNaN(parsed.getTime())) {
+        const ist = new Date(parsed.getTime() + 5.5 * 60 * 60 * 1000);
+        const dd = String(ist.getUTCDate()).padStart(2, "0");
+        const mm = String(ist.getUTCMonth() + 1).padStart(2, "0");
+        const yyyy = ist.getUTCFullYear();
+        return `${dd}/${mm}/${yyyy}`;
       }
-      loadSelectedTextVal();
+      return s;
     }
 
-    function loadSelectedTextVal() {
-      const target = document.getElementById("editTargetApp").value;
-      const key = document.getElementById("editTextKeySelect").value;
-      if (target === "client") {
-        document.getElementById("editTextCustomVal").value = clientCustomTexts[key] || "";
-      } else {
-        document.getElementById("editTextCustomVal").value = adminCustomTexts[key] || "";
+    function ddmmyyyyToDateObj(ddmmyyyy) {
+      const norm = normalizeToDDMMYYYY(ddmmyyyy);
+      const [d, m, y] = norm.split("/");
+      if (!d || !m || !y) return null;
+      return new Date(Number(y), Number(m) - 1, Number(d));
+    }
+
+    function getDayName(ddmmyyyy) {
+      const obj = ddmmyyyyToDateObj(ddmmyyyy);
+      if (!obj) return "";
+      return obj.toLocaleDateString("en-US", { weekday: "long" });
+    }
+
+    // ================= SMART EXPRESSION PARSER ("55 ( [রুটি ২৫, তড়কা ৩০])" -> 55) =================
+    function parseCellAmount(val) {
+      if (!val || val === "-") return 0;
+      // Remove notes inside (...) and [...] so breakdown numbers don't double-count
+      let stripped = String(val)
+        .replace(/\[[^\]]*\]/g, "")
+        .replace(/\([^)]*\)/g, "");
+      const nums = stripped.match(/[0-9]+(\.[0-9]+)?/g);
+      if (!nums) return 0;
+      return nums.reduce((acc, n) => acc + parseFloat(n), 0);
+    }
+
+    // Auto "Number + Space = ()" formatter
+    function handleSmartInput(el) {
+      const v = el.value;
+      // If user typed a number followed by space and letters (e.g. "5 chop " or "50 vat ")
+      const updated = v.replace(/(^|\+\s*)(\d+(?:\.\d+)?)\s+([^\d+\s()][^+\n()]*)$/g, "$1$2 ($3)");
+      if (updated !== v) {
+        el.value = updated;
       }
+      recalcEntryTotal();
     }
 
-    function saveCustomTextOverride() {
-      const target = document.getElementById("editTargetApp").value;
-      const key = document.getElementById("editTextKeySelect").value;
-      const val = document.getElementById("editTextCustomVal").value.trim();
-      if (!val) return alert("Please enter custom text or use Reset Default.");
-
-      if (target === "client") {
-        clientCustomTexts[key] = val;
-        db.ref("config/customTexts/" + key).set(val);
-        alert("✅ Client App text updated live!");
-      } else {
-        adminCustomTexts[key] = val;
-        localStorage.setItem("hc_admin_texts", JSON.stringify(adminCustomTexts));
-        db.ref("config/adminCustomTexts/" + key).set(val);
-        applyAdminLanguage();
-        alert("✅ Admin App text updated!");
-      }
-    }
-
-    function resetCustomTextOverride() {
-      const target = document.getElementById("editTargetApp").value;
-      const key = document.getElementById("editTextKeySelect").value;
-      document.getElementById("editTextCustomVal").value = "";
-      if (target === "client") {
-        delete clientCustomTexts[key];
-        db.ref("config/customTexts/" + key).remove();
-      } else {
-        delete adminCustomTexts[key];
-        localStorage.setItem("hc_admin_texts", JSON.stringify(adminCustomTexts));
-        db.ref("config/adminCustomTexts/" + key).remove();
-        applyAdminLanguage();
-      }
-      alert("Reset to default!");
-    }
-
-    // ================= EXPENSE CALCULATION & ENTRY =================
-    function evalMathField(str) {
-      if (!str) return 0;
-      const matches = String(str).match(/[0-9]+(\.[0-9]+)?/g);
-      if (!matches) return 0;
-      return matches.reduce((sum, n) => sum + parseFloat(n), 0);
-    }
-
-    function recalcFormTotal() {
-      const m = evalMathField(document.getElementById("expMorning").value);
-      const n = evalMathField(document.getElementById("expNoon").value);
-      const a = evalMathField(document.getElementById("expAfternoon").value);
-      const nt = evalMathField(document.getElementById("expNight").value);
-      const o = evalMathField(document.getElementById("expOther").value);
-      const tot = Math.round(m + n + a + nt + o);
-      document.getElementById("liveFormTotal").textContent = "Total: ₹" + tot;
+    function recalcEntryTotal() {
+      const tot = Math.round(
+        parseCellAmount(document.getElementById("inMorning").value) +
+        parseCellAmount(document.getElementById("inNoon").value) +
+        parseCellAmount(document.getElementById("inAfternoon").value) +
+        parseCellAmount(document.getElementById("inNight").value) +
+        parseCellAmount(document.getElementById("inOther").value)
+      );
+      document.getElementById("dayTotalDisplay").textContent = "₹" + tot;
       return tot;
     }
 
-    function clearEntryForm() {
-      ["expMorning", "expNoon", "expAfternoon", "expNight", "expOther"].forEach(id => {
-        document.getElementById(id).value = "";
+    // ================= STATE & STORAGE RECOVERY =================
+    let allLogs = [];
+    let currentSelectedDate = getISTDateDDMMYYYY(0);
+    let ledgerWeekOffset = 0;
+    let monthlyLimit = Number(localStorage.getItem("cet_monthly_limit") || 4000);
+    let liveBudgetObj = null;
+    let devicesMap = {};
+    let adminLang = localStorage.getItem("cet_admin_lang") || "en";
+    let adminOverrides = JSON.parse(localStorage.getItem("cet_admin_overrides") || "{}");
+    let clientOverrides = {};
+
+    let shortcuts = JSON.parse(localStorage.getItem("cet_shortcuts") || "null") || [
+      { id: "sc1", label: "+ ₹20 Breakfast", val: "20(Breakfast)", field: "inMorning" },
+      { id: "sc2", label: "+ ₹60 Lunch", val: "60(Lunch)", field: "inNoon" },
+      { id: "sc3", label: "+ ₹15 Snacks", val: "15(Snacks)", field: "inAfternoon" },
+      { id: "sc4", label: "+ ₹45 Dinner", val: "45(Dinner)", field: "inNight" }
+    ];
+
+    function recoverAnyLocalCache() {
+      const keys = ["cet_logs_v1", "campus_expenses", "expenseData", "expenses", "hc_expenses_cache"];
+      const map = new Map();
+      keys.forEach(k => {
+        try {
+          const raw = JSON.parse(localStorage.getItem(k) || "[]");
+          if (Array.isArray(raw)) {
+            raw.forEach(item => {
+              const d = normalizeToDDMMYYYY(item.date);
+              if (d && !d.includes("2099")) {
+                const m = item.morning || "-";
+                const n = item.noon || "-";
+                const a = item.afternoon || "-";
+                const nt = item.night || "-";
+                const o = item.other || "-";
+                const tot = Number(item.total) || Math.round(parseCellAmount(m)+parseCellAmount(n)+parseCellAmount(a)+parseCellAmount(nt)+parseCellAmount(o));
+                map.set(d, { date: d, morning: m, noon: n, afternoon: a, night: nt, other: o, total: tot });
+              }
+            });
+          }
+        } catch (e) {}
       });
-      recalcFormTotal();
+      return Array.from(map.values());
     }
 
-    function loadDateIntoForm(specificDate) {
-      const d = specificDate || document.getElementById("expDate").value;
-      document.getElementById("expDate").value = d;
-      const found = expensesData.find(r => String(r.date).startsWith(d));
-      if (found) {
-        document.getElementById("expMorning").value = found.morning === "-" ? "" : found.morning;
-        document.getElementById("expNoon").value = found.noon === "-" ? "" : found.noon;
-        document.getElementById("expAfternoon").value = found.afternoon === "-" ? "" : found.afternoon;
-        document.getElementById("expNight").value = found.night === "-" ? "" : found.night;
-        document.getElementById("expOther").value = found.other === "-" ? "" : found.other;
-      } else {
-        clearEntryForm();
+    async function fetchAllSheetData() {
+      allLogs = recoverAnyLocalCache();
+      refreshAllViews();
+
+      try {
+        const res = await fetch(window.APP_CONFIG.sheetApiUrl);
+        const raw = await res.json();
+        const arr = Array.isArray(raw) ? raw : (raw.data || raw.records || []);
+        const map = new Map();
+        allLogs.forEach(x => map.set(x.date, x));
+
+        arr.forEach(r => {
+          const d = normalizeToDDMMYYYY(r.date);
+          if (!d || d.includes("2099")) return;
+          const m = r.morning !== undefined && r.morning !== "" ? String(r.morning) : "-";
+          const n = r.noon !== undefined && r.noon !== "" ? String(r.noon) : "-";
+          const a = r.afternoon !== undefined && r.afternoon !== "" ? String(r.afternoon) : "-";
+          const nt = r.night !== undefined && r.night !== "" ? String(r.night) : "-";
+          const o = r.other !== undefined && r.other !== "" ? String(r.other) : "-";
+          const calcTot = Math.round(parseCellAmount(m)+parseCellAmount(n)+parseCellAmount(a)+parseCellAmount(nt)+parseCellAmount(o));
+          const tot = Number(r.total) > 0 ? Number(r.total) : calcTot;
+          map.set(d, { date: d, morning: m, noon: n, afternoon: a, night: nt, other: o, total: tot });
+        });
+
+        allLogs = Array.from(map.values()).sort((a, b) => ddmmyyyyToDateObj(b.date) - ddmmyyyyToDateObj(a.date));
+        localStorage.setItem("cet_logs_v1", JSON.stringify(allLogs));
+        refreshAllViews();
+      } catch (e) {
+        console.warn("Using cached logs:", e);
       }
-      recalcFormTotal();
     }
 
-    async function saveDailyExpense() {
-      const date = document.getElementById("expDate").value;
-      if (!date) return alert("Select a date first!");
+    function refreshAllViews() {
+      buildDateDropdown();
+      loadLogForDate(currentSelectedDate);
+      renderWeekAndMonthStats();
+      renderAnalyticsCharts();
+      renderLedgerTable();
+      updateFuelBadge();
+    }
 
-      const morning = document.getElementById("expMorning").value.trim() || "-";
-      const noon = document.getElementById("expNoon").value.trim() || "-";
-      const afternoon = document.getElementById("expAfternoon").value.trim() || "-";
-      const night = document.getElementById("expNight").value.trim() || "-";
-      const other = document.getElementById("expOther").value.trim() || "-";
-      const total = recalcFormTotal();
+    // ================= ENTRY TAB LOGIC =================
+    function buildDateDropdown() {
+      const sel = document.getElementById("dateSelectDropdown");
+      const filterSel = document.getElementById("ledgerDateFilter");
+      const dateSet = new Set([getISTDateDDMMYYYY(0), getISTDateDDMMYYYY(-1), currentSelectedDate]);
+      allLogs.forEach(l => dateSet.add(l.date));
 
-      const payload = { date, morning, noon, afternoon, night, other, total };
+      const sortedDates = Array.from(dateSet).sort((a, b) => ddmmyyyyToDateObj(b) - ddmmyyyyToDateObj(a));
 
-      // 1. Instant local & Firebase mirror save (Zero Data Loss Guarantee)
-      const idx = expensesData.findIndex(r => String(r.date).startsWith(date));
-      if (idx >= 0) expensesData[idx] = payload;
-      else expensesData.unshift(payload);
+      sel.innerHTML = sortedDates.map(d => `<option value="${d}">${d}</option>`).join("") +
+        `<option value="__PICK__">📅 Pick Another Date...</option>`;
+      sel.value = currentSelectedDate;
 
-      localStorage.setItem("hc_expenses_cache", JSON.stringify(expensesData));
-      db.ref("expenses_backup/" + date).set(payload);
-      renderExpenseList();
-      renderAnalytics();
-      updateAdminFuelMini();
+      const prevFilter = filterSel.value;
+      filterSel.innerHTML = `<option value="">All Dates (${allLogs.length} days)</option>` +
+        sortedDates.map(d => `<option value="${d}">${d} (${getDayName(d)})</option>`).join("");
+      filterSel.value = prevFilter;
+    }
 
-      // 2. Sync to Google Sheet
-      const statusEl = document.getElementById("syncStatusText");
-      statusEl.textContent = "⏳ Syncing to Sheet...";
+    function onDateDropdownChange(val) {
+      if (val === "__PICK__") {
+        document.getElementById("customDatePicker").style.display = "block";
+        return;
+      }
+      document.getElementById("customDatePicker").style.display = "none";
+      currentSelectedDate = val;
+      loadLogForDate(val);
+    }
+
+    function onCustomDatePicked(yyyy_mm_dd) {
+      if (!yyyy_mm_dd) return;
+      const d = normalizeToDDMMYYYY(yyyy_mm_dd);
+      currentSelectedDate = d;
+      document.getElementById("customDatePicker").style.display = "none";
+      buildDateDropdown();
+      loadLogForDate(d);
+    }
+
+    function loadLogForDate(ddmmyyyy) {
+      const found = allLogs.find(x => x.date === ddmmyyyy);
+      const statusEl = document.getElementById("loadedStatusText");
+      if (found) {
+        statusEl.textContent = `✏️ Loaded ${ddmmyyyy} — add/edit & update`;
+        document.getElementById("inMorning").value = found.morning === "-" ? "" : found.morning;
+        document.getElementById("inNoon").value = found.noon === "-" ? "" : found.noon;
+        document.getElementById("inAfternoon").value = found.afternoon === "-" ? "" : found.afternoon;
+        document.getElementById("inNight").value = found.night === "-" ? "" : found.night;
+        document.getElementById("inOther").value = found.other === "-" ? "" : found.other;
+      } else {
+        statusEl.textContent = `🆕 New Entry for ${ddmmyyyy}`;
+        ["inMorning", "inNoon", "inAfternoon", "inNight", "inOther"].forEach(id => document.getElementById(id).value = "");
+      }
+      recalcEntryTotal();
+    }
+
+    function promptAddMoreItem() {
+      const item = prompt("Enter item (e.g. 20 (Xerox)):");
+      if (!item || !item.trim()) return;
+      const inp = document.getElementById("inOther");
+      inp.value = inp.value.trim() ? `${inp.value.trim()} + ${item.trim()}` : item.trim();
+      handleSmartInput(inp);
+    }
+
+    async function saveCurrentEntry() {
+      const date = currentSelectedDate;
+      const morning = document.getElementById("inMorning").value.trim() || "-";
+      const noon = document.getElementById("inNoon").value.trim() || "-";
+      const afternoon = document.getElementById("inAfternoon").value.trim() || "-";
+      const night = document.getElementById("inNight").value.trim() || "-";
+      const other = document.getElementById("inOther").value.trim() || "-";
+      const total = recalcEntryTotal();
+
+      const record = { date, morning, noon, afternoon, night, other, total };
+
+      const idx = allLogs.findIndex(x => x.date === date);
+      if (idx >= 0) allLogs[idx] = record;
+      else allLogs.unshift(record);
+      allLogs.sort((a, b) => ddmmyyyyToDateObj(b.date) - ddmmyyyyToDateObj(a.date));
+
+      localStorage.setItem("cet_logs_v1", JSON.stringify(allLogs));
+      db.ref("expenses_backup/" + date.replace(/\//g, "-")).set(record);
+      refreshAllViews();
+
+      const badge = document.getElementById("syncStateBadge");
+      badge.textContent = "⏳ Syncing...";
       try {
         await fetch(window.APP_CONFIG.sheetApiUrl, {
           method: "POST",
           mode: "no-cors",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(record)
         });
-        statusEl.textContent = "✅ Synced to Cloud & Sheet";
-        setTimeout(() => syncAllData(), 2000);
+        badge.textContent = "✅ Synced";
+        setTimeout(() => { badge.textContent = "No Duplicate"; }, 2500);
       } catch (e) {
-        statusEl.textContent = "⚠️ Saved Locally & Firebase (Offline)";
+        badge.textContent = "Saved Locally";
       }
     }
 
-    async function syncAllData() {
-      try {
-        const res = await fetch(window.APP_CONFIG.sheetApiUrl);
-        const raw = await res.json();
-        const clean = raw.filter(r => r.date && !String(r.date).includes("2099")).reverse();
-        if (clean.length > 0) {
-          expensesData = clean;
-          localStorage.setItem("hc_expenses_cache", JSON.stringify(expensesData));
-        }
-      } catch (e) {
-        const cached = localStorage.getItem("hc_expenses_cache");
-        if (cached) expensesData = JSON.parse(cached);
-      }
-      renderExpenseList();
-      renderAnalytics();
-      updateAdminFuelMini();
-    }
-
-    function renderExpenseList() {
-      const box = document.getElementById("adminExpenseList");
-      if (expensesData.length === 0) {
-        box.innerHTML = '<div style="font-size:12px; color:var(--muted); text-align:center; padding:16px;">No records yet</div>';
-        return;
-      }
-      box.innerHTML = expensesData.slice(0, 20).map(r => `
-        <div class="exp-row" onclick="loadDateIntoForm('${String(r.date).slice(0,10)}')" style="cursor:pointer;">
-          <div class="exp-info">
-            <h4>📅 ${r.date}</h4>
-            <p>M:${r.morning} | N:${r.noon} | A:${r.afternoon} | Nt:${r.night} | Oth:${r.other}</p>
-          </div>
-          <div class="exp-right">
-            <div class="exp-amt">₹${r.total || 0}</div>
-            <div style="font-size:10px; color:#a78bfa;">Edit ✎</div>
-          </div>
-        </div>
-      `).join("");
-    }
-
-    // ================= CUSTOMIZABLE SHORTCUTS =================
+    // ================= SHORTCUTS =================
     function renderShortcuts() {
-      const wrap = document.getElementById("shortcutChips");
-      wrap.innerHTML = shortcuts.map(sc => `
-        <button class="sc-chip" onclick="applyShortcut('${sc.id}')">+ ${sc.label}</button>
-      `).join("");
+      const box = document.getElementById("shortcutContainer");
+      box.innerHTML = shortcuts.map(s => `
+        <button class="sc-chip" onclick="useShortcut('${s.id}')">${s.label}</button>
+      `).join("") + `<button class="sc-chip" style="border-color:rgba(168,85,247,0.45); color:#c4b5fd;" onclick="openScModal()">⚙️</button>`;
 
-      const mList = document.getElementById("modalShortcutList");
+      const mList = document.getElementById("scModalList");
       if (mList) {
-        mList.innerHTML = shortcuts.map(sc => `
-          <div class="exp-row">
-            <div>
-              <strong style="font-size:13px;">${sc.label}</strong>
-              <span style="font-size:11px; color:var(--muted); display:block;">₹${sc.amt} → ${sc.slot.replace('exp','')}</span>
-            </div>
-            <button class="pill-btn" style="color:#f87171;" onclick="deleteShortcut('${sc.id}')">🗑</button>
+        mList.innerHTML = shortcuts.map(s => `
+          <div style="display:flex; justify-content:space-between; align-items:center; background:var(--card-inner); padding:9px 12px; border-radius:12px; margin-bottom:7px;">
+            <span style="font-size:12.5px; font-weight:700;">${s.label} → ${s.val}</span>
+            <button class="set-limit-btn" style="color:#f87171;" onclick="removeShortcut('${s.id}')">🗑</button>
           </div>
         `).join("");
       }
     }
 
-    function applyShortcut(id) {
-      const sc = shortcuts.find(s => s.id === id);
+    function useShortcut(id) {
+      const sc = shortcuts.find(x => x.id === id);
       if (!sc) return;
-      const inp = document.getElementById(sc.slot);
-      const cur = inp.value.trim();
-      inp.value = cur ? `${cur}+${sc.amt}` : `${sc.amt}`;
-      recalcFormTotal();
+      const inp = document.getElementById(sc.field);
+      inp.value = inp.value.trim() ? `${inp.value.trim()} + ${sc.val}` : sc.val;
+      recalcEntryTotal();
     }
 
-    function openShortcutModal() {
+    function openScModal() {
       renderShortcuts();
-      document.getElementById("shortcutModal").style.display = "flex";
+      document.getElementById("scModal").style.display = "flex";
     }
-    function closeShortcutModal() {
-      document.getElementById("shortcutModal").style.display = "none";
-    }
-    function addCustomShortcut() {
-      const label = document.getElementById("newScLabel").value.trim();
-      const amt = Number(document.getElementById("newScAmt").value);
-      const slot = document.getElementById("newScSlot").value;
-      if (!label || !amt) return alert("Enter shortcut name and amount!");
-      shortcuts.push({ id: "sc_" + Date.now(), label, amt, slot });
-      localStorage.setItem("hc_shortcuts", JSON.stringify(shortcuts));
-      db.ref("config/shortcuts").set(shortcuts);
-      document.getElementById("newScLabel").value = "";
-      document.getElementById("newScAmt").value = "";
+    function addNewShortcut() {
+      const label = document.getElementById("scNewLbl").value.trim();
+      const val = document.getElementById("scNewVal").value.trim();
+      const field = document.getElementById("scNewField").value;
+      if (!label || !val) return alert("Enter shortcut label and value!");
+      shortcuts.push({ id: "sc_" + Date.now(), label, val, field });
+      localStorage.setItem("cet_shortcuts", JSON.stringify(shortcuts));
+      document.getElementById("scNewLbl").value = "";
+      document.getElementById("scNewVal").value = "";
       renderShortcuts();
     }
-    function deleteShortcut(id) {
-      shortcuts = shortcuts.filter(s => s.id !== id);
-      localStorage.setItem("hc_shortcuts", JSON.stringify(shortcuts));
-      db.ref("config/shortcuts").set(shortcuts);
+    function removeShortcut(id) {
+      shortcuts = shortcuts.filter(x => x.id !== id);
+      localStorage.setItem("cet_shortcuts", JSON.stringify(shortcuts));
       renderShortcuts();
     }
 
-    // ================= BUDGET FUEL GAUGE & ANALYTICS =================
-    function saveBudgetCycle() {
-      const total = Number(document.getElementById("bTotalInput").value);
-      const days = Number(document.getElementById("bDaysInput").value) || 7;
-      const startDate = document.getElementById("bStartInput").value;
-      const note = document.getElementById("bNoteInput").value.trim();
-
-      if (!total || !startDate) return alert("Enter budget amount and start date!");
-
-      const bObj = { total, days, startDate, note, updatedAt: Date.now() };
-      db.ref("budget").set(bObj);
-      alert("✅ Live Fuel Gauge updated on all connected devices!");
+    // ================= WEEK & MONTH STATS (Monday - Sunday Active Week) =================
+    function getWeekBounds(weekOffset = 0) {
+      const todayObj = ddmmyyyyToDateObj(getISTDateDDMMYYYY(0));
+      const day = todayObj.getDay(); // 0=Sun, 1=Mon
+      const diffToMon = (day === 0 ? -6 : 1 - day) + (weekOffset * 7);
+      const mon = new Date(todayObj.getFullYear(), todayObj.getMonth(), todayObj.getDate() + diffToMon);
+      const sun = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 6, 23, 59, 59);
+      return { mon, sun };
     }
 
-    function updateAdminFuelMini() {
-      if (!currentBudget || !currentBudget.total) return;
-      const total = Number(currentBudget.total);
-      const startObj = new Date(currentBudget.startDate + "T00:00:00");
+    function getLogsForWeek(weekOffset = 0) {
+      const { mon, sun } = getWeekBounds(weekOffset);
+      return allLogs.filter(l => {
+        const d = ddmmyyyyToDateObj(l.date);
+        return d && d >= mon && d <= sun;
+      }).sort((a, b) => ddmmyyyyToDateObj(a.date) - ddmmyyyyToDateObj(b.date));
+    }
+
+    function renderWeekAndMonthStats() {
+      const activeWeekLogs = getLogsForWeek(0);
+      const wkTotal = activeWeekLogs.reduce((s, x) => s + (Number(x.total) || 0), 0);
+      const daysCount = activeWeekLogs.length;
+      const avg = daysCount > 0 ? Math.round(wkTotal / daysCount) : 0;
+      const highest = activeWeekLogs.reduce((mx, x) => Math.max(mx, Number(x.total) || 0), 0);
+
+      const todayObj = ddmmyyyyToDateObj(getISTDateDDMMYYYY(0));
+      const curMonth = todayObj.getMonth();
+      const curYear = todayObj.getFullYear();
+      const monthTotal = allLogs.reduce((s, x) => {
+        const d = ddmmyyyyToDateObj(x.date);
+        return (d && d.getMonth() === curMonth && d.getFullYear() === curYear) ? s + (Number(x.total) || 0) : s;
+      }, 0);
+
+      document.getElementById("wkSpendVal").textContent = "₹" + wkTotal;
+      document.getElementById("wkAvgVal").textContent = "₹" + avg;
+      document.getElementById("wkDaysVal").textContent = daysCount + " Days";
+      document.getElementById("wkHighVal").textContent = "₹" + highest;
+      document.getElementById("monthSpendVal").textContent = "₹" + monthTotal;
+
+      // Monthly Budget Planner
+      document.getElementById("anMonthSpent").textContent = "₹" + monthTotal;
+      document.getElementById("anMonthLimit").textContent = "₹" + monthlyLimit;
+      const rem = Math.max(0, monthlyLimit - monthTotal);
+      const pct = monthlyLimit > 0 ? Math.min(100, Math.round((monthTotal / monthlyLimit) * 100)) : 0;
+      document.getElementById("anMonthBar").style.width = pct + "%";
+      document.getElementById("anMonthRem").textContent = "₹" + rem;
+      const daysInMonth = new Date(curYear, curMonth + 1, 0).getDate();
+      const daysLeft = Math.max(1, daysInMonth - todayObj.getDate() + 1);
+      document.getElementById("anSafeDaily").textContent = "₹" + Math.round(rem / daysLeft) + "/day";
+    }
+
+    function promptMonthlyLimit() {
+      const val = prompt("Set Monthly Budget Limit (₹):", monthlyLimit);
+      if (val && !isNaN(val) && Number(val) > 0) {
+        monthlyLimit = Number(val);
+        localStorage.setItem("cet_monthly_limit", monthlyLimit);
+        renderWeekAndMonthStats();
+      }
+    }
+
+    // ================= ANALYTICS CHARTS (Donut + Bar) =================
+    function renderAnalyticsCharts() {
+      const wkLogs = getLogsForWeek(0);
+      let m = 0, n = 0, a = 0, nt = 0, o = 0;
+      wkLogs.forEach(l => {
+        m += parseCellAmount(l.morning);
+        n += parseCellAmount(l.noon);
+        a += parseCellAmount(l.afternoon);
+        nt += parseCellAmount(l.night);
+        o += parseCellAmount(l.other);
+      });
+
+      // Donut Chart
+      const dCanvas = document.getElementById("donutCanvas");
+      if (dCanvas) {
+        const ctx = dCanvas.getContext("2d");
+        ctx.clearRect(0, 0, 165, 165);
+        const vals = [m, n, a, nt, o];
+        const cols = ["#38bdf8", "#10b981", "#f59e0b", "#a855f7", "#fb7185"];
+        const sum = vals.reduce((s, x) => s + x, 0);
+        let start = -Math.PI / 2;
+        if (sum === 0) {
+          ctx.beginPath();
+          ctx.arc(82.5, 82.5, 62, 0, Math.PI * 2);
+          ctx.strokeStyle = "#262040";
+          ctx.lineWidth = 24;
+          ctx.stroke();
+        } else {
+          vals.forEach((v, i) => {
+            if (v <= 0) return;
+            const slice = (v / sum) * Math.PI * 2;
+            ctx.beginPath();
+            ctx.arc(82.5, 82.5, 62, start, start + slice);
+            ctx.strokeStyle = cols[i];
+            ctx.lineWidth = 24;
+            ctx.stroke();
+            start += slice;
+          });
+        }
+      }
+
+      // Bar Chart
+      const bCanvas = document.getElementById("barCanvas");
+      if (bCanvas) {
+        const ctx = bCanvas.getContext("2d");
+        const W = bCanvas.width, H = bCanvas.height;
+        ctx.clearRect(0, 0, W, H);
+        const maxV = Math.max(180, ...wkLogs.map(x => Number(x.total) || 0));
+        const padL = 36, padB = 26, padT = 14;
+        const chartH = H - padB - padT;
+        const chartW = W - padL - 12;
+
+        ctx.strokeStyle = "rgba(255,255,255,0.06)";
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "11px Plus Jakarta Sans";
+        for (let i = 0; i <= 4; i++) {
+          const y = padT + (chartH / 4) * i;
+          const lbl = Math.round(maxV - (maxV / 4) * i);
+          ctx.fillText(lbl, 4, y + 4);
+          ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - 8, y); ctx.stroke();
+        }
+
+        if (wkLogs.length > 0) {
+          const slotW = chartW / wkLogs.length;
+          const barW = Math.min(42, slotW * 0.62);
+          wkLogs.forEach((item, idx) => {
+            const val = Number(item.total) || 0;
+            const bh = (val / maxV) * chartH;
+            const x = padL + idx * slotW + (slotW - barW) / 2;
+            const y = padT + chartH - bh;
+            ctx.fillStyle = "#f59e0b";
+            ctx.beginPath();
+            ctx.roundRect ? ctx.roundRect(x, y, barW, bh, [8, 8, 0, 0]) : ctx.rect(x, y, barW, bh);
+            ctx.fill();
+            ctx.fillStyle = "#94a3b8";
+            ctx.fillText(item.date.slice(0, 5), x + 2, H - 8);
+          });
+        }
+      }
+    }
+
+    // ================= LEDGER TAB LOGIC =================
+    function changeLedgerWeek(dir) {
+      ledgerWeekOffset += dir;
+      renderLedgerTable();
+    }
+
+    function resetLedgerFilters() {
+      document.getElementById("ledgerDateFilter").value = "";
+      document.getElementById("ledgerSearchInp").value = "";
+      ledgerWeekOffset = 0;
+      renderLedgerTable();
+    }
+
+    function renderLedgerTable() {
+      const fDate = document.getElementById("ledgerDateFilter").value;
+      const q = document.getElementById("ledgerSearchInp").value.trim().toLowerCase();
+      const { mon, sun } = getWeekBounds(ledgerWeekOffset);
+
+      document.getElementById("ledgerWeekTitle").textContent =
+        ledgerWeekOffset === 0 ? "Current Week" : ledgerWeekOffset === -1 ? "Last Week" : `Week (${ledgerWeekOffset > 0 ? "+" : ""}${ledgerWeekOffset})`;
+      document.getElementById("ledgerWeekRange").textContent =
+        `${mon.toLocaleDateString("en-GB", {day:"2-digit", month:"short"})} - ${sun.toLocaleDateString("en-GB", {day:"2-digit", month:"short"})}`;
+
+      let rows = [];
+      if (fDate || q) {
+        rows = allLogs.filter(l => {
+          if (fDate && l.date !== fDate) return false;
+          if (q) {
+            const blob = `${l.date} ${l.morning} ${l.noon} ${l.afternoon} ${l.night} ${l.other}`.toLowerCase();
+            if (!blob.includes(q)) return false;
+          }
+          return true;
+        });
+      } else {
+        rows = getLogsForWeek(ledgerWeekOffset);
+      }
+
+      const tbody = document.getElementById("ledgerTableBody");
+      if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--muted); padding:22px;">No records for this selection</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = rows.map(r => `
+        <tr>
+          <td><span class="date-pill">${r.date} (${getDayName(r.date)})</span></td>
+          <td>${r.morning}</td>
+          <td>${r.noon}</td>
+          <td>${r.afternoon}</td>
+          <td>${r.night}</td>
+          <td>${r.other}</td>
+          <td><span class="tot-badge sensitive-amt">₹${r.total}</span></td>
+          <td style="white-space:nowrap;">
+            <button class="act-btn" style="background:rgba(139,92,246,0.22); color:#c4b5fd;" onclick="editRowFromLedger('${r.date}')">✏️</button>
+            <button class="act-btn" style="background:rgba(239,68,68,0.2); color:#fca5a5;" onclick="deleteSingleRow('${r.date}')">🗑️</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function editRowFromLedger(date) {
+      currentSelectedDate = date;
+      buildDateDropdown();
+      loadLogForDate(date);
+      goTab("entry", document.querySelector(".nav-btn"));
+    }
+
+    function deleteSingleRow(date) {
+      if (!confirm(`Delete log for ${date}?`)) return;
+      allLogs = allLogs.filter(x => x.date !== date);
+      localStorage.setItem("cet_logs_v1", JSON.stringify(allLogs));
+      db.ref("expenses_backup/" + date.replace(/\//g, "-")).remove();
+      refreshAllViews();
+    }
+
+    function deleteCurrentWeekLogs() {
+      const wkRows = getLogsForWeek(ledgerWeekOffset);
+      if (wkRows.length === 0) return alert("No logs in this week.");
+      if (!confirm(`Delete all ${wkRows.length} logs in this week?`)) return;
+      const dates = new Set(wkRows.map(x => x.date));
+      allLogs = allLogs.filter(x => !dates.has(x.date));
+      localStorage.setItem("cet_logs_v1", JSON.stringify(allLogs));
+      refreshAllViews();
+    }
+
+    function shareWeekWhatsApp() {
+      const wkRows = getLogsForWeek(ledgerWeekOffset);
+      const sum = wkRows.reduce((s, x) => s + (Number(x.total) || 0), 0);
+      const lines = wkRows.map(r => `• ${r.date}: ₹${r.total}`).join("\n");
+      const msg = `📊 *Campus Expense Summary*\n${lines}\n\n*Week Total: ₹${sum}*`;
+      window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank");
+    }
+
+    // ================= FUEL GAUGE BUDGET SYNC =================
+    function saveFuelGaugeBudget() {
+      const total = Number(document.getElementById("fuelTotalInp").value);
+      const days = Number(document.getElementById("fuelDaysInp").value) || 7;
+      const startIso = document.getElementById("fuelStartInp").value;
+      const note = document.getElementById("fuelNoteInp").value.trim();
+      if (!total || !startIso) return alert("Enter amount and start date!");
+      const startDate = normalizeToDDMMYYYY(startIso);
+      db.ref("budget").set({ total, days, startDate, note, updatedAt: Date.now() });
+      alert("✅ Client Fuel Gauge updated live!");
+    }
+
+    function updateFuelBadge() {
+      if (!liveBudgetObj || !liveBudgetObj.total) return;
+      const total = Number(liveBudgetObj.total);
+      const startObj = ddmmyyyyToDateObj(liveBudgetObj.startDate);
       let spent = 0;
-      expensesData.forEach(r => {
-        const dObj = new Date(String(r.date).slice(0,10) + "T00:00:00");
-        if (!isNaN(dObj) && dObj >= startObj) spent += Number(r.total) || 0;
+      allLogs.forEach(l => {
+        const d = ddmmyyyyToDateObj(l.date);
+        if (!startObj || (d && d >= startObj)) spent += Number(l.total) || 0;
       });
       const left = Math.max(0, total - spent);
       const pct = Math.max(0, Math.min(100, Math.round((left / total) * 100)));
-
-      document.getElementById("miniFuelText").textContent = `₹${left} left / ₹${total} (${pct}%)`;
-      const fill = document.getElementById("miniFuelFill");
-      fill.style.width = pct + "%";
-      fill.style.background = pct > 70 ? "#10b981" : pct > 40 ? "#eab308" : pct > 20 ? "#f97316" : pct > 10 ? "#ef4444" : "#991b1b";
+      document.getElementById("fuelLiveBadge").textContent = `₹${left} / ₹${total} (${pct}%)`;
     }
 
-    function renderAnalytics() {
-      const now = new Date();
-      const todayStr = now.toISOString().slice(0, 10);
-      let today = 0, week = 0, month = 0;
-
-      expensesData.forEach(r => {
-        const val = Number(r.total) || 0;
-        const dStr = String(r.date).slice(0, 10);
-        const dObj = new Date(dStr + "T00:00:00");
-        if (dStr === todayStr) today += val;
-        if (!isNaN(dObj)) {
-          const diff = (now - dObj) / (1000 * 60 * 60 * 24);
-          if (diff <= 7 && diff >= -1) week += val;
-          if (dObj.getMonth() === now.getMonth() && dObj.getFullYear() === now.getFullYear()) month += val;
-        }
-      });
-
-      document.getElementById("stToday").textContent = "₹" + today;
-      document.getElementById("stWeek").textContent = "₹" + week;
-      document.getElementById("stMonth").textContent = "₹" + month;
-
-      // Last 7 days bar chart
-      const chartBox = document.getElementById("weeklyChart");
-      const last7 = expensesData.slice(0, 7).reverse();
-      const maxVal = Math.max(100, ...last7.map(x => Number(x.total) || 0));
-      chartBox.innerHTML = last7.map(item => {
-        const val = Number(item.total) || 0;
-        const hPct = Math.max(6, Math.round((val / maxVal) * 100));
-        const shortDate = String(item.date).slice(5, 10);
-        return `
-          <div class="bar-col">
-            <div class="bar-val">₹${val}</div>
-            <div class="bar-fill" style="height:${hPct}%;"></div>
-            <div class="bar-lbl">${shortDate}</div>
-          </div>
-        `;
-      }).join("");
-    }
-
-    function shareWhatsApp() {
-      const recent = expensesData.slice(0, 7).map(r => `📅 ${r.date}: ₹${r.total}`).join("\n");
-      const text = `📊 *Campus Expense Summary*\n\n${recent}\n\n⛽ Budget Status: ${document.getElementById("miniFuelText").textContent}`;
-      window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
-    }
-
-    // ================= ALERT, CUSTOM AUDIO, VOLUME & LIVE STATUS =================
-    function setVolPreset(v) {
-      document.getElementById("alertVolumeSlider").value = v;
-      document.getElementById("volPctDisplay").textContent = v + "%";
-    }
-    function setAlertMsg(msg) {
-      document.getElementById("alertMsgInput").value = msg;
-    }
-
-    let activeAlertListener = null;
-
-    function sendPriorityRing() {
+    // ================= ALERT, VOLUME & CUSTOM AUDIO =================
+    function triggerRemoteRing() {
       const target = document.getElementById("alertTargetSelect").value;
-      const msg = document.getElementById("alertMsgInput").value.trim() || "জরুরি দরকার! একটু কথা আছে।";
-      const volume = Number(document.getElementById("alertVolumeSlider").value);
-      const useCustomAudio = document.getElementById("useCustomAudioChk").checked;
-      const alertId = "al_" + Date.now();
+      const msg = document.getElementById("alertMsgInp").value.trim() || "জরুরি দরকার! একটু কথা আছে।";
+      const volume = Number(document.getElementById("volSlider").value);
+      const id = "al_" + Date.now();
+      const targetLabel = target === "ALL" ? "All Devices" : (devicesMap[target]?.label || target);
 
-      const targetLabel = target === "ALL" ? "All Devices" : (connectedDevices[target]?.label || target);
+      db.ref("active_alert").set({ id, status: "active", target, msg, volume, useCustomAudio: true, timestamp: Date.now() });
+      db.ref("alert_history/" + id).set({ id, msg, target, targetLabel, volume, timestamp: Date.now(), finalStatus: "Sent" });
 
-      const alertObj = {
-        id: alertId,
-        status: "active",
-        target,
-        msg,
-        volume,
-        useCustomAudio,
-        timestamp: Date.now()
-      };
+      const box = document.getElementById("liveStatusBox");
+      const list = document.getElementById("liveStatusItems");
+      box.style.display = "block";
+      list.innerHTML = `<span class="status-pill st-sent">📤 Dispatched... Waiting for device</span>`;
 
-      db.ref("active_alert").set(alertObj);
-      db.ref("alert_history/" + alertId).set({
-        id: alertId,
-        msg,
-        target,
-        targetLabel,
-        volume,
-        timestamp: Date.now(),
-        finalStatus: "Sent"
+      db.ref("alert_status/" + id).on("value", snap => {
+        const data = snap.val();
+        if (!data) return;
+        list.innerHTML = Object.entries(data).map(([devId, st]) => {
+          const lbl = st.deviceLabel || devId;
+          if (st.state === "seen") {
+            db.ref("alert_history/" + id + "/finalStatus").set("Seen by " + lbl);
+            return `<div style="margin-bottom:4px;"><span class="status-pill st-seen">✅ ${lbl}: SEEN & STOPPED</span></div>`;
+          }
+          db.ref("alert_history/" + id + "/finalStatus").set("Ringing on " + lbl);
+          return `<div style="margin-bottom:4px;"><span class="status-pill st-ringing">🔔 ${lbl}: RINGING NOW...</span></div>`;
+        }).join("");
       });
-
-      trackAlertDelivery(alertId);
     }
 
-    function stopActiveRing() {
+    function stopRemoteRing() {
       db.ref("active_alert/status").set("stopped");
     }
 
-    function trackAlertDelivery(alertId) {
-      const box = document.getElementById("liveDeliveryBox");
-      const list = document.getElementById("liveDeliveryList");
-      box.style.display = "block";
-      list.innerHTML = `<span class="status-pill st-sent">📤 Signal Dispatched... Waiting for device</span>`;
-
-      if (activeAlertListener) activeAlertListener.off();
-      activeAlertListener = db.ref("alert_status/" + alertId);
-      activeAlertListener.on("value", (snap) => {
-        const data = snap.val();
-        if (!data) return;
-        let html = "";
-        for (const [devId, info] of Object.entries(data)) {
-          const st = info.state;
-          const lbl = info.deviceLabel || devId;
-          if (st === "seen") {
-            html += `<div style="margin-bottom:5px;"><span class="status-pill st-seen">✅ ${lbl}: SEEN & STOPPED</span></div>`;
-            db.ref("alert_history/" + alertId + "/finalStatus").set("Seen by " + lbl);
-          } else if (st === "ringing") {
-            html += `<div style="margin-bottom:5px;"><span class="status-pill st-ringing">🔔 ${lbl}: RINGING NOW...</span></div>`;
-            db.ref("alert_history/" + alertId + "/finalStatus").set("Ringing on " + lbl);
-          }
-        }
-        if (html) list.innerHTML = html;
-      });
-    }
-
-    function uploadCustomAudio(input) {
-      const file = input.files[0];
+    function uploadDeviceAudio(inp) {
+      const file = inp.files[0];
       if (!file) return;
-      if (file.size > 1.6 * 1024 * 1024) {
-        alert("File too large! Please choose an audio clip under 1.5 MB for fast instant ring.");
-        input.value = "";
-        return;
-      }
-      const targetDev = document.getElementById("audioDeviceSelect").value;
+      if (file.size > 1.6 * 1024 * 1024) return alert("Choose audio under 1.5 MB!");
+      const dev = document.getElementById("audioDevSelect").value;
       const reader = new FileReader();
-      reader.onload = async function (e) {
-        await db.ref("device_audio/" + targetDev).set({
-          name: file.name,
-          base64: e.target.result,
-          updatedAt: Date.now()
-        });
-        renderSavedAudioInfo();
-        alert("✅ Custom ringtone saved for selected device!");
+      reader.onload = async e => {
+        await db.ref("device_audio/" + dev).set({ name: file.name, base64: e.target.result, updatedAt: Date.now() });
+        checkDeviceAudio();
+        alert("✅ Custom ringtone uploaded!");
       };
       reader.readAsDataURL(file);
     }
 
-    async function renderSavedAudioInfo() {
-      const targetDev = document.getElementById("audioDeviceSelect").value;
-      const el = document.getElementById("savedAudioStatus");
-      const snap = await db.ref("device_audio/" + targetDev).once("value");
-      const val = snap.val();
-      if (val && val.name) {
-        el.innerHTML = `🎵 Active Audio: <strong style="color:#34d399;">${val.name}</strong> <button class="pill-btn" style="margin-left:8px; color:#f87171;" onclick="deleteCustomAudio('${targetDev}')">Remove</button>`;
+    async function checkDeviceAudio() {
+      const dev = document.getElementById("audioDevSelect").value;
+      const snap = await db.ref("device_audio/" + dev).once("value");
+      const v = snap.val();
+      document.getElementById("audioInfoTxt").innerHTML = v
+        ? `🎵 Active: <strong style="color:#34d399;">${v.name}</strong> <button class="set-limit-btn" onclick="db.ref('device_audio/${dev}').remove().then(checkDeviceAudio)">Remove</button>`
+        : "Using built-in default ringtone.";
+    }
+
+    // ================= CONTROL MODAL (PIN, DEVICES, LANGUAGE & TEXT EDITOR) =================
+    const ADMIN_TEXTS = {
+      en: { appTitle: "Campus Expense Tracker", appSub: "Hostel & College Daily Log", wkSpendLbl: "ACTIVE WEEK SPEND", dailyAvgLbl: "DAILY AVG", loggedDaysLbl: "Logged Days", highestDayLbl: "Highest Day", monthSpendLbl: "Month Spend", quickEntryTitle: "⚡ Quick Campus Entry", updateBtn: "Update Entry →" },
+      bn: { appTitle: "Campus Expense Tracker", appSub: "হোস্টেল ও কলেজ দৈনিক হিসাব", wkSpendLbl: "এই সপ্তাহের খরচ", dailyAvgLbl: "দৈনিক গড়", loggedDaysLbl: "মোট দিন", highestDayLbl: "সর্বোচ্চ খরচ", monthSpendLbl: "এই মাসের খরচ", quickEntryTitle: "⚡ দ্রুত খরচের এন্ট্রি", updateBtn: "হিসাব আপডেট করুন →" }
+    };
+    const CLIENT_TEXTS = {
+      loginTitle: "Client Login Title", loginSub: "Client Login Subtitle", appTitle: "Client Header Title",
+      fuelTitle: "Fuel Meter Title", lblTotal: "Allocated Label", lblSpent: "Spent Label", lblLeft: "Remaining Label",
+      logTitle: "Client Expense List Title"
+    };
+
+    function setAdminLang(lang) {
+      adminLang = lang;
+      localStorage.setItem("cet_admin_lang", lang);
+      applyAdminTexts();
+    }
+
+    function applyAdminTexts() {
+      const dict = ADMIN_TEXTS[adminLang] || ADMIN_TEXTS.en;
+      for (const [k, defVal] of Object.entries(dict)) {
+        const el = document.getElementById("at_" + k);
+        if (el) el.textContent = adminOverrides[k] || defVal;
+      }
+    }
+
+    function openControlModal() {
+      document.getElementById("ctrlAdminLang").value = adminLang;
+      fillTextKeyOpts();
+      document.getElementById("controlModal").style.display = "flex";
+    }
+    function closeControlModal() { document.getElementById("controlModal").style.display = "none"; }
+
+    function saveNewClientPin() {
+      const p = document.getElementById("ctrlPinInp").value.trim();
+      if (!/^\d{4}$/.test(p)) return alert("Enter 4-digit numeric PIN!");
+      db.ref("config/accessCode").set(p);
+      alert("✅ Client Access PIN updated to " + p);
+    }
+
+    function fillTextKeyOpts() {
+      const app = document.getElementById("txtEditApp").value;
+      const sel = document.getElementById("txtEditKey");
+      const src = app === "client" ? CLIENT_TEXTS : ADMIN_TEXTS.en;
+      sel.innerHTML = Object.entries(src).map(([k, lbl]) => `<option value="${k}">${lbl}</option>`).join("");
+      loadKeyCurrentVal();
+    }
+    function loadKeyCurrentVal() {
+      const app = document.getElementById("txtEditApp").value;
+      const k = document.getElementById("txtEditKey").value;
+      document.getElementById("txtEditVal").value = app === "client" ? (clientOverrides[k] || "") : (adminOverrides[k] || "");
+    }
+    function applyTextCustom() {
+      const app = document.getElementById("txtEditApp").value;
+      const k = document.getElementById("txtEditKey").value;
+      const v = document.getElementById("txtEditVal").value.trim();
+      if (!v) return;
+      if (app === "client") {
+        clientOverrides[k] = v;
+        db.ref("config/customTexts/" + k).set(v);
       } else {
-        el.textContent = "Using built-in default alert tone for this target.";
+        adminOverrides[k] = v;
+        localStorage.setItem("cet_admin_overrides", JSON.stringify(adminOverrides));
+        applyAdminTexts();
       }
+      alert("✅ Text updated live!");
     }
-
-    function deleteCustomAudio(targetDev) {
-      db.ref("device_audio/" + targetDev).remove().then(() => renderSavedAudioInfo());
-    }
-
-    function clearAlertHistory() {
-      if (confirm("Clear all alert history logs?")) {
-        db.ref("alert_history").remove();
-      }
-    }
-
-    // ================= DEVICE & PIN MANAGEMENT =================
-    function updateClientPin() {
-      const pin = document.getElementById("clientPinInput").value.trim();
-      if (!/^\d{4}$/.test(pin)) return alert("Enter an exact 4-digit numeric PIN!");
-      db.ref("config/accessCode").set(pin);
-      alert("✅ Client Access PIN updated to " + pin);
-    }
-
-    function kickDevice(devId, label) {
-      if (confirm(`Force logout "${label}"? They will need the 4-digit PIN to log back in.`)) {
-        db.ref("devices/" + devId + "/status").set("kicked");
-        setTimeout(() => db.ref("devices/" + devId).remove(), 2500);
+    function resetTextCustom() {
+      const app = document.getElementById("txtEditApp").value;
+      const k = document.getElementById("txtEditKey").value;
+      document.getElementById("txtEditVal").value = "";
+      if (app === "client") {
+        delete clientOverrides[k];
+        db.ref("config/customTexts/" + k).remove();
+      } else {
+        delete adminOverrides[k];
+        localStorage.setItem("cet_admin_overrides", JSON.stringify(adminOverrides));
+        applyAdminTexts();
       }
     }
 
     // ================= AI MODE (GEMINI + IMAGE + VOICE + CHAT HISTORY) =================
-    let aiChats = JSON.parse(localStorage.getItem("hc_ai_chats") || "[]");
-    let activeChatId = localStorage.getItem("hc_active_chat") || null;
-    let pendingImageBase64 = null;
-    let pendingImageMime = null;
-    let autoSpeakAi = false;
+    let chats = JSON.parse(localStorage.getItem("cet_ai_chats") || "[]");
+    let curChatId = localStorage.getItem("cet_cur_chat") || null;
+    let imgB64 = null, imgMime = null, speakReplies = false;
 
-    function initAiChats() {
-      if (aiChats.length === 0) {
-        createNewAiChat(true);
-      } else {
-        if (!activeChatId || !aiChats.find(c => c.id === activeChatId)) {
-          activeChatId = aiChats[0].id;
-        }
-        renderActiveAiChat();
+    function initAi() {
+      if (chats.length === 0) newAiChat(true);
+      else {
+        if (!curChatId || !chats.find(c => c.id === curChatId)) curChatId = chats[0].id;
+        renderAiChat();
       }
     }
-
-    function saveAiChatsLocal() {
-      localStorage.setItem("hc_ai_chats", JSON.stringify(aiChats));
-      localStorage.setItem("hc_active_chat", activeChatId);
+    function saveChats() {
+      localStorage.setItem("cet_ai_chats", JSON.stringify(chats));
+      localStorage.setItem("cet_cur_chat", curChatId);
     }
-
-    function createNewAiChat(silent) {
-      const newChat = {
-        id: "chat_" + Date.now(),
-        title: "Finance Chat " + (aiChats.length + 1),
-        messages: [
-          { role: "ai", text: "হ্যালো অয়ন! তোর সব খরচের হিসাব, বাজেট ফুয়েল আর অ্যালার্ট লগ আমার মনে আছে। যা খুশি জিজ্ঞেস কর, বা কোনো বিলের ছবি আপলোড কর!" }
-        ]
-      };
-      aiChats.unshift(newChat);
-      activeChatId = newChat.id;
-      saveAiChatsLocal();
-      if (!silent) renderActiveAiChat();
+    function newAiChat(silent) {
+      const c = { id: "c_" + Date.now(), title: "Chat " + (chats.length + 1), msgs: [{ role: "ai", text: "হ্যালো অয়ন! তোর সারা জীবনের সব খরচের হিসাব ও বাজেট আমার কাছে আছে। যা খুশি জিজ্ঞেস কর বা বিলের ছবি আপলোড কর!" }] };
+      chats.unshift(c); curChatId = c.id; saveChats();
+      if (!silent) renderAiChat();
     }
-
-    function openAiDrawer() {
-      const list = document.getElementById("aiChatHistoryList");
-      list.innerHTML = aiChats.map(c => `
-        <div class="chat-hist-item ${c.id === activeChatId ? 'active' : ''}">
-          <div style="flex:1; cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; font-weight:700;" onclick="selectAiChat('${c.id}')">
-            💬 ${c.title}
-          </div>
-          <button class="pill-btn" style="padding:3px 7px;" onclick="renameAiChat('${c.id}')">✎</button>
-          <button class="pill-btn" style="padding:3px 7px; color:#f87171;" onclick="deleteAiChat('${c.id}')">🗑</button>
-        </div>
-      `).join("");
-      document.getElementById("aiHistoryModal").style.display = "flex";
-    }
-
-    function closeAiDrawer() {
-      document.getElementById("aiHistoryModal").style.display = "none";
-    }
-
-    function selectAiChat(id) {
-      activeChatId = id;
-      saveAiChatsLocal();
-      renderActiveAiChat();
-      closeAiDrawer();
-    }
-
-    function renameAiChat(id) {
-      const c = aiChats.find(x => x.id === id);
+    function renderAiChat() {
+      const c = chats.find(x => x.id === curChatId);
       if (!c) return;
-      const name = prompt("Rename chat:", c.title);
-      if (name && name.trim()) {
-        c.title = name.trim();
-        saveAiChatsLocal();
-        openAiDrawer();
-        renderActiveAiChat();
-      }
-    }
-
-    function deleteAiChat(id) {
-      if (!confirm("Delete this chat?")) return;
-      aiChats = aiChats.filter(x => x.id !== id);
-      if (aiChats.length === 0) createNewAiChat(true);
-      else if (activeChatId === id) activeChatId = aiChats[0].id;
-      saveAiChatsLocal();
-      openAiDrawer();
-      renderActiveAiChat();
-    }
-
-    function renderActiveAiChat() {
-      const chat = aiChats.find(c => c.id === activeChatId);
-      if (!chat) return;
-      document.getElementById("currentChatTitle").textContent = chat.title;
-      const box = document.getElementById("aiMessagesBox");
-      box.innerHTML = chat.messages.map(m => `
-        <div class="msg-bubble ${m.role === 'user' ? 'msg-user' : 'msg-ai'}">
-          ${m.image ? `<img src="${m.image}" class="msg-img" />` : ""}
+      document.getElementById("aiActiveTitle").textContent = c.title;
+      const box = document.getElementById("aiChatBox");
+      box.innerHTML = c.msgs.map(m => `
+        <div class="bubble ${m.role === 'user' ? 'b-user' : 'b-ai'}">
+          ${m.img ? `<img src="${m.img}" style="max-width:170px; border-radius:10px; display:block; margin-bottom:5px;" />` : ""}
           <div>${m.text}</div>
         </div>
       `).join("");
       box.scrollTop = box.scrollHeight;
     }
-
-    function handleAiImageSelect(input) {
-      const file = input.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        pendingImageBase64 = e.target.result;
-        pendingImageMime = file.type || "image/jpeg";
-        document.getElementById("aiImgThumb").src = pendingImageBase64;
-        document.getElementById("aiImgName").textContent = file.name;
-        document.getElementById("aiImgPreviewWrap").style.display = "flex";
+    function openChatDrawer() {
+      document.getElementById("chatHistItems").innerHTML = chats.map(c => `
+        <div style="display:flex; justify-content:space-between; align-items:center; background:var(--card-inner); padding:9px 11px; border-radius:12px; margin-bottom:7px;">
+          <span style="flex:1; font-size:12.5px; font-weight:700; cursor:pointer;" onclick="curChatId='${c.id}'; saveChats(); renderAiChat(); document.getElementById('chatHistModal').style.display='none';">💬 ${c.title}</span>
+          <div style="display:flex; gap:5px;">
+            <button class="set-limit-btn" onclick="const n=prompt('Rename:', '${c.title}'); if(n){const x=chats.find(i=>i.id==='${c.id}'); x.title=n; saveChats(); openChatDrawer(); renderAiChat();}">✎</button>
+            <button class="set-limit-btn" style="color:#f87171;" onclick="chats=chats.filter(i=>i.id!=='${c.id}'); if(!chats.length) newAiChat(true); else curChatId=chats[0].id; saveChats(); openChatDrawer(); renderAiChat();">🗑</button>
+          </div>
+        </div>
+      `).join("");
+      document.getElementById("chatHistModal").style.display = "flex";
+    }
+    function pickAiImg(inp) {
+      const f = inp.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = e => {
+        imgB64 = e.target.result; imgMime = f.type || "image/jpeg";
+        document.getElementById("aiThumb").src = imgB64;
+        document.getElementById("aiImgLbl").textContent = f.name;
+        document.getElementById("aiImgBar").style.display = "flex";
       };
-      reader.readAsDataURL(file);
+      r.readAsDataURL(f);
     }
-
-    function clearAiImage() {
-      pendingImageBase64 = null;
-      pendingImageMime = null;
-      document.getElementById("aiImageInput").value = "";
-      document.getElementById("aiImgPreviewWrap").style.display = "none";
+    function clearAiImg() {
+      imgB64 = null; imgMime = null;
+      document.getElementById("aiFileInp").value = "";
+      document.getElementById("aiImgBar").style.display = "none";
     }
-
-    function toggleAiVoiceReply() {
-      autoSpeakAi = !autoSpeakAi;
-      document.getElementById("ttsToggleBtn").textContent = autoSpeakAi ? "🔊" : "🔇";
+    function toggleSpeakAi() {
+      speakReplies = !speakReplies;
+      document.getElementById("aiSpeakToggle").textContent = speakReplies ? "🔊" : "🔇";
     }
-
-    function toggleVoiceInput() {
-      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRec) return alert("Voice recognition not supported in this browser.");
-      const rec = new SpeechRec();
+    function startAiVoice() {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) return alert("Voice not supported here.");
+      const rec = new SR();
       rec.lang = adminLang === "bn" ? "bn-IN" : "en-IN";
-      const btn = document.getElementById("aiMicBtn");
-      btn.classList.add("recording");
-      rec.onresult = (e) => {
-        const transcript = e.results[0][0].transcript;
-        document.getElementById("aiPromptInput").value = transcript;
-        btn.classList.remove("recording");
-        sendAiMessage();
-      };
-      rec.onerror = () => btn.classList.remove("recording");
-      rec.onend = () => btn.classList.remove("recording");
+      rec.onresult = e => { document.getElementById("aiTextInp").value = e.results[0][0].transcript; askGemini(); };
       rec.start();
     }
+    async function askGemini() {
+      const inp = document.getElementById("aiTextInp");
+      const q = inp.value.trim();
+      if (!q && !imgB64) return;
+      const c = chats.find(x => x.id === curChatId);
+      const attach = imgB64, mime = imgMime;
+      c.msgs.push({ role: "user", text: q || "Analyze image", img: attach });
+      if (c.msgs.length === 2 && q) c.title = q.slice(0, 24);
+      inp.value = ""; clearAiImg();
+      c.msgs.push({ role: "ai", text: "⏳ Thinking..." });
+      renderAiChat();
 
-    async function sendAiMessage() {
-      const inp = document.getElementById("aiPromptInput");
-      const text = inp.value.trim();
-      if (!text && !pendingImageBase64) return;
+      const ctx = `You are Ayan's smart expense assistant. Reply naturally in Bengali or English matching Ayan's query.
+Today (IST): ${getISTDateDDMMYYYY(0)}
+Monthly Budget Limit: ₹${monthlyLimit}
+Live Fuel Budget: ${JSON.stringify(liveBudgetObj || {})}
+Total Logged Days: ${allLogs.length}
+Recent 60 Days Expense Logs: ${JSON.stringify(allLogs.slice(0, 60))}`;
 
-      const chat = aiChats.find(c => c.id === activeChatId);
-      const userImg = pendingImageBase64;
-      const userMime = pendingImageMime;
-
-      chat.messages.push({ role: "user", text: text || "Analyze this image", image: userImg });
-      if (chat.messages.length === 2 && text) {
-        chat.title = text.slice(0, 26);
-      }
-      inp.value = "";
-      clearAiImage();
-      renderActiveAiChat();
-
-      // Add typing indicator
-      chat.messages.push({ role: "ai", text: "⏳ Thinking..." });
-      renderActiveAiChat();
-
-      const financialContext = `
-You are Ayan's personal smart finance & system assistant inside HisabCloud Pro.
-Reply naturally, concisely, and accurately in the same language Ayan asks (Bengali or English).
-Current Budget Fuel Data: ${JSON.stringify(currentBudget || {})}
-Recent Expense Records (Latest 45 days): ${JSON.stringify(expensesData.slice(0, 45))}
-Connected Client Devices: ${JSON.stringify(Object.values(connectedDevices))}
-Today's Date: ${new Date().toISOString().slice(0, 10)}
-      `.trim();
-
-      const parts = [{ text: financialContext + "\n\nUser Question: " + (text || "Analyze this uploaded receipt/image and extract details.") }];
-      if (userImg) {
-        const rawB64 = userImg.split(",")[1];
-        parts.push({ inlineData: { mimeType: userMime, data: rawB64 } });
-      }
+      const parts = [{ text: ctx + "\n\nUser: " + (q || "Analyze this receipt/image.") }];
+      if (attach) parts.push({ inlineData: { mimeType: mime, data: attach.split(",")[1] } });
 
       try {
-        const apiKey = window.APP_CONFIG.geminiApiKey;
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-        const res = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${window.APP_CONFIG.geminiApiKey}`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ contents: [{ parts }] })
         });
         const data = await res.json();
-        const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, couldn't generate a response right now.";
-
-        chat.messages[chat.messages.length - 1].text = reply;
-        saveAiChatsLocal();
-        renderActiveAiChat();
-
-        if (autoSpeakAi && "speechSynthesis" in window) {
-          const utter = new SpeechSynthesisUtterance(reply.replace(/[*#_]/g, ""));
-          utter.lang = /[\u0980-\u09FF]/.test(reply) ? "bn-IN" : "en-IN";
-          window.speechSynthesis.speak(utter);
+        const ans = data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response.";
+        c.msgs[c.msgs.length - 1].text = ans;
+        saveChats(); renderAiChat();
+        if (speakReplies && "speechSynthesis" in window) {
+          const u = new SpeechSynthesisUtterance(ans.replace(/[*#_]/g, ""));
+          u.lang = /[\u0980-\u09FF]/.test(ans) ? "bn-IN" : "en-IN";
+          speechSynthesis.speak(u);
         }
       } catch (e) {
-        chat.messages[chat.messages.length - 1].text = "⚠️ Network or API error. Check internet connection.";
-        renderActiveAiChat();
+        c.msgs[c.msgs.length - 1].text = "⚠️ Network error.";
+        renderAiChat();
       }
     }
 
-    // ================= INITIALIZE ADMIN APP & REALTIME LISTENERS =================
-    let adminInitialized = false;
-    function initAdminApp() {
-      if (adminInitialized) return;
-      adminInitialized = true;
+    // ================= NAVIGATION & PRIVACY =================
+    function goTab(name, btn) {
+      document.querySelectorAll(".tab-pane").forEach(x => x.classList.remove("active"));
+      document.querySelectorAll(".nav-btn").forEach(x => x.classList.remove("active"));
+      document.getElementById("tab-" + name).classList.add("active");
+      btn.classList.add("active");
+      if (name === "analytics") renderAnalyticsCharts();
+    }
+    function togglePrivacy() {
+      document.body.classList.toggle("privacy-on");
+    }
 
-      const today = new Date().toISOString().slice(0, 10);
-      document.getElementById("expDate").value = today;
-      document.getElementById("bStartInput").value = today;
-
-      applyAdminLanguage();
+    // ================= BOOT TRACKER =================
+    let booted = false;
+    function bootTracker() {
+      if (booted) return;
+      booted = true;
+      document.getElementById("fuelStartInp").value = new Date().toISOString().slice(0, 10);
+      applyAdminTexts();
       renderShortcuts();
-      initAiChats();
-      syncAllData();
+      initAi();
+      fetchAllSheetData();
 
-      // Listen to Firebase Config (PIN, Language, Custom Texts, Shortcuts)
-      db.ref("config").on("value", (snap) => {
+      db.ref("config").on("value", snap => {
         const cfg = snap.val() || {};
-        if (cfg.accessCode) document.getElementById("clientPinInput").value = cfg.accessCode;
-        if (cfg.clientLang) document.getElementById("clientLangSelect").value = cfg.clientLang;
-        if (cfg.customTexts) clientCustomTexts = cfg.customTexts;
-        if (cfg.shortcuts && Array.isArray(cfg.shortcuts)) {
-          shortcuts = cfg.shortcuts;
-          localStorage.setItem("hc_shortcuts", JSON.stringify(shortcuts));
-          renderShortcuts();
-        }
-        populateTextKeyDropdown();
+        if (cfg.accessCode) document.getElementById("ctrlPinInp").value = cfg.accessCode;
+        if (cfg.clientLang) document.getElementById("ctrlClientLang").value = cfg.clientLang;
+        if (cfg.customTexts) clientOverrides = cfg.customTexts;
       });
 
-      // Listen to Budget Fuel Data
-      db.ref("budget").on("value", (snap) => {
-        currentBudget = snap.val();
-        if (currentBudget) {
-          document.getElementById("bTotalInput").value = currentBudget.total || "";
-          document.getElementById("bDaysInput").value = currentBudget.days || 7;
-          if (currentBudget.startDate) document.getElementById("bStartInput").value = currentBudget.startDate;
-          document.getElementById("bNoteInput").value = currentBudget.note || "";
+      db.ref("budget").on("value", snap => {
+        liveBudgetObj = snap.val();
+        if (liveBudgetObj) {
+          document.getElementById("fuelTotalInp").value = liveBudgetObj.total || "";
+          document.getElementById("fuelDaysInp").value = liveBudgetObj.days || 7;
+          document.getElementById("fuelNoteInp").value = liveBudgetObj.note || "";
         }
-        updateAdminFuelMini();
+        updateFuelBadge();
       });
 
-      // Listen to Connected Devices
-      db.ref("devices").on("value", (snap) => {
-        connectedDevices = snap.val() || {};
-        const listEl = document.getElementById("connectedDevicesList");
-        const alertSel = document.getElementById("alertTargetSelect");
-        const audioSel = document.getElementById("audioDeviceSelect");
+      db.ref("devices").on("value", snap => {
+        devicesMap = snap.val() || {};
+        const devs = Object.values(devicesMap).filter(d => d && d.status !== "kicked");
+        const aSel = document.getElementById("alertTargetSelect");
+        const audSel = document.getElementById("audioDevSelect");
+        aSel.innerHTML = `<option value="ALL">📢 All Connected Devices</option>`;
+        audSel.innerHTML = `<option value="ALL">All Devices (Default)</option>`;
 
-        const prevAlertTarget = alertSel.value;
-        const prevAudioTarget = audioSel.value;
-
-        alertSel.innerHTML = '<option value="ALL">📢 All Connected Devices</option>';
-        audioSel.innerHTML = '<option value="ALL">All Devices (Default Custom)</option>';
-
-        const activeDevs = Object.values(connectedDevices).filter(d => d && d.status !== "kicked");
-        document.getElementById("deviceCountBadge").textContent = activeDevs.length + " Active";
-
-        if (activeDevs.length === 0) {
-          listEl.innerHTML = '<div style="font-size:12px; color:var(--muted);">No devices logged in yet.</div>';
-        } else {
-          listEl.innerHTML = activeDevs.map(d => {
-            const isOnline = d.lastSeen && (Date.now() - d.lastSeen < 90000);
-            const opt1 = document.createElement("option");
-            opt1.value = d.id;
-            opt1.textContent = `📱 ${d.label} (${d.model || "Android"})`;
-            alertSel.appendChild(opt1);
-
-            const opt2 = opt1.cloneNode(true);
-            audioSel.appendChild(opt2);
-
-            return `
-              <div class="exp-row">
-                <div>
-                  <strong style="font-size:13px;">📱 ${d.label}</strong>
-                  <span style="font-size:11px; color:${isOnline ? '#34d399' : '#94a3b8'}; display:block;">
-                    ${isOnline ? '● Online now' : '○ Last seen: ' + new Date(d.lastSeen || Date.now()).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} • ${d.model || ""}
-                  </span>
+        document.getElementById("ctrlDeviceList").innerHTML = devs.length === 0
+          ? `<div style="font-size:12px; color:var(--muted);">No client devices connected yet.</div>`
+          : devs.map(d => {
+              aSel.innerHTML += `<option value="${d.id}">📱 ${d.label} (${d.model || ""})</option>`;
+              audSel.innerHTML += `<option value="${d.id}">📱 ${d.label}</option>`;
+              return `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--card-inner); padding:9px 11px; border-radius:12px; margin-bottom:6px;">
+                  <div>
+                    <strong style="font-size:12.5px;">📱 ${d.label}</strong>
+                    <span style="display:block; font-size:10.5px; color:var(--muted);">${d.model || ""}</span>
+                  </div>
+                  <button class="set-limit-btn" style="color:#f87171;" onclick="if(confirm('Kick ${d.label}?')){db.ref('devices/${d.id}/status').set('kicked');}">Kick</button>
                 </div>
-                <button class="pill-btn" style="color:#f87171;" onclick="kickDevice('${d.id}', '${d.label}')">Kick</button>
-              </div>
-            `;
-          }).join("");
-        }
-
-        if (prevAlertTarget) alertSel.value = prevAlertTarget;
-        if (prevAudioTarget) audioSel.value = prevAudioTarget;
-        renderSavedAudioInfo();
+              `;
+            }).join("");
+        checkDeviceAudio();
       });
 
-      // Listen to Alert History Log
-      db.ref("alert_history").limitToLast(15).on("value", (snap) => {
-        const raw = snap.val() || {};
-        const items = Object.values(raw).reverse();
-        const box = document.getElementById("alertHistoryList");
-        if (items.length === 0) {
-          box.innerHTML = '<div style="font-size:12px; color:var(--muted); text-align:center;">No alert history yet</div>';
-          return;
-        }
-        box.innerHTML = items.map(h => `
-          <div class="exp-row">
-            <div style="flex:1;">
-              <strong style="font-size:13px;">${h.msg}</strong>
-              <p style="font-size:11px; color:var(--muted); margin-top:2px;">
-                To: ${h.targetLabel || h.target} • Vol: ${h.volume ?? 100}% • ${new Date(h.timestamp).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})}
-              </p>
-            </div>
-            <span class="status-pill ${String(h.finalStatus).includes('Seen') ? 'st-seen' : 'st-ringing'}">${h.finalStatus || 'Sent'}</span>
-          </div>
-        `).join("");
+      db.ref("alert_history").limitToLast(15).on("value", snap => {
+        const items = Object.values(snap.val() || {}).reverse();
+        document.getElementById("alertHistoryBox").innerHTML = items.length === 0
+          ? `<div style="font-size:12px; color:var(--muted); text-align:center;">No alert logs yet</div>`
+          : items.map(h => `
+              <div style="display:flex; justify-content:space-between; align-items:center; background:var(--card-inner); padding:10px 12px; border-radius:13px; margin-bottom:7px;">
+                <div>
+                  <strong style="font-size:12.5px;">${h.msg}</strong>
+                  <div style="font-size:10.5px; color:var(--muted);">To: ${h.targetLabel} • Vol: ${h.volume}%</div>
+                </div>
+                <span class="status-pill ${String(h.finalStatus).includes('Seen') ? 'st-seen' : 'st-ringing'}">${h.finalStatus}</span>
+              </div>
+            `).join("");
       });
     }
   </script>
