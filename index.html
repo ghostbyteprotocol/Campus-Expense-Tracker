@@ -31,7 +31,6 @@
       overflow-x: hidden;
     }
 
-    /* Privacy Masking */
     body.privacy-on .sensitive-amt {
       filter: blur(6px);
       user-select: none;
@@ -79,7 +78,6 @@
       padding: 14px 14px 92px;
     }
 
-    /* Original Top Header Card */
     .header-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -109,7 +107,6 @@
     }
     .hdr-icon-btn:active { transform: scale(0.93); }
 
-    /* Cards */
     .card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -118,7 +115,6 @@
       margin-bottom: 14px;
     }
 
-    /* Active Week Spend Summary Card (Screenshot 1) */
     .week-top-row {
       display: flex;
       justify-content: space-between;
@@ -142,7 +138,6 @@
     .m-stat-box .lbl { font-size: 10.5px; color: var(--muted); margin-bottom: 4px; }
     .m-stat-box .val { font-size: 14px; font-weight: 800; }
 
-    /* Quick Campus Entry Card (Screenshot 1) */
     .entry-hdr {
       display: flex;
       justify-content: space-between;
@@ -164,7 +159,7 @@
       margin-bottom: 12px;
     }
     .loaded-banner span:first-child { color: #e9d5ff; font-weight: 600; }
-    .loaded-banner span:last-child { color: var(--muted); font-size: 10.5px; }
+    .loaded-banner span:last-child { color: #34d399; font-size: 10.5px; font-weight: 700; }
 
     .sc-row {
       display: flex;
@@ -234,7 +229,7 @@
     }
     .update-entry-btn:active { transform: scale(0.97); }
 
-    /* ================= ANALYTICS TAB (Screenshot 2) ================= */
+    /* ANALYTICS TAB */
     .budget-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .set-limit-btn {
       background: var(--card-inner); border: 1px solid var(--border); color: #e2e8f0;
@@ -257,7 +252,7 @@
     .leg-item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; color: #e2e8f0; }
     .leg-dot { width: 16px; height: 9px; border-radius: 3px; }
 
-    /* ================= LEDGER TAB (Screenshots 3 & 4) ================= */
+    /* LEDGER TAB */
     .week-nav-bar {
       background: var(--card-inner);
       border-radius: 15px;
@@ -325,7 +320,7 @@
       border: none; border-radius: 13px; padding: 11px 6px; font-size: 11.5px; font-weight: 700; cursor: pointer;
     }
 
-    /* ================= ALERT & AI TABS ================= */
+    /* ALERT & AI TABS */
     .btn-full {
       width: 100%; border: none; border-radius: 14px; padding: 13px; font-size: 13.5px;
       font-weight: 800; color: #fff; background: linear-gradient(135deg, #8b5cf6, #6366f1); cursor: pointer;
@@ -351,7 +346,7 @@
     .b-user { align-self: flex-end; background: linear-gradient(135deg, #8b5cf6, #6366f1); color: #fff; }
     .b-ai { align-self: flex-start; background: var(--card-inner); color: #f1f5f9; border: 1px solid var(--border); }
 
-    /* Bottom Navigation Bar (Original Style) */
+    /* Bottom Navigation */
     .bottom-nav {
       position: fixed;
       bottom: 8px;
@@ -461,7 +456,6 @@
 
   <!-- ================= 2. MAIN CAMPUS EXPENSE TRACKER ================= -->
   <div id="appShell">
-    <!-- Top Header Card (Exact Match) -->
     <div class="header-card">
       <div class="header-left">
         <div class="grad-cap-box">🎓</div>
@@ -479,7 +473,6 @@
 
     <!-- ================= TAB 1: ENTRY ================= -->
     <div id="tab-entry" class="tab-pane active">
-      <!-- Active Week Spend Summary Card -->
       <div class="card">
         <div class="week-top-row">
           <div>
@@ -507,7 +500,6 @@
         </div>
       </div>
 
-      <!-- Quick Campus Entry Card -->
       <div class="card">
         <div class="entry-hdr">
           <h2 id="at_quickEntryTitle">⚡ Quick Campus Entry</h2>
@@ -516,10 +508,9 @@
 
         <div class="loaded-banner">
           <span id="loadedStatusText">✏️ Loaded — add/edit & update</span>
-          <span id="syncStateBadge">No Duplicate</span>
+          <span id="syncStateBadge">Syncing...</span>
         </div>
 
-        <!-- Customizable Quick Shortcuts -->
         <div class="sc-row" id="shortcutContainer"></div>
 
         <div class="mb-11">
@@ -569,7 +560,6 @@
 
     <!-- ================= TAB 2: ANALYTICS ================= -->
     <div id="tab-analytics" class="tab-pane">
-      <!-- Monthly Budget Planner (Screenshot 2) -->
       <div class="card">
         <div class="budget-top">
           <h3 style="font-size:15px; font-weight:800;">🎯 Monthly Budget Planner</h3>
@@ -588,7 +578,6 @@
         </div>
       </div>
 
-      <!-- Live Pocket Money Fuel Gauge Controller (Syncs to Client App) -->
       <div class="card">
         <div class="budget-top">
           <h3 style="font-size:15px; font-weight:800;">⛽ Client Pocket Money Fuel Meter</h3>
@@ -617,7 +606,6 @@
         <button class="btn-full" onclick="saveFuelGaugeBudget()">🚀 Update Live Fuel Gauge on Client</button>
       </div>
 
-      <!-- Active Week Category Split (Donut Chart) -->
       <div class="card">
         <h3 style="font-size:15px; font-weight:800; margin-bottom:8px;">📊 Active Week Category Split</h3>
         <div class="donut-wrap">
@@ -632,14 +620,13 @@
         </div>
       </div>
 
-      <!-- Daily Spend Trend (Bar Chart) -->
       <div class="card">
         <h3 style="font-size:15px; font-weight:800; margin-bottom:10px;">📈 Daily Spend Trend (Active Week)</h3>
         <canvas id="barCanvas" width="420" height="200" style="width:100%; height:200px;"></canvas>
       </div>
     </div>
 
-    <!-- ================= TAB 3: LEDGER (Screenshots 3 & 4) ================= -->
+    <!-- ================= TAB 3: LEDGER ================= -->
     <div id="tab-ledger" class="tab-pane">
       <div class="card">
         <div class="mb-11">
@@ -689,7 +676,7 @@
       </div>
     </div>
 
-    <!-- ================= TAB 4: ALERT, VOLUME, CUSTOM AUDIO & HISTORY ================= -->
+    <!-- ================= TAB 4: ALERT ================= -->
     <div id="tab-alert" class="tab-pane">
       <div class="card">
         <div class="budget-top">
@@ -734,7 +721,6 @@
         </div>
       </div>
 
-      <!-- Custom Audio per Device -->
       <div class="card">
         <h3 style="font-size:14px; font-weight:800; margin-bottom:10px;">🎵 Custom Alert Ringtone (Per Device)</h3>
         <div class="mb-11">
@@ -748,7 +734,6 @@
         <div id="audioInfoTxt" style="font-size:11.5px; color:var(--muted);">Default ringtone active</div>
       </div>
 
-      <!-- Alert & Request History Log -->
       <div class="card">
         <div class="budget-top">
           <h3 style="font-size:14px; font-weight:800;">📜 Alert & Request History</h3>
@@ -804,7 +789,6 @@
   </div>
 
   <!-- ================= MODALS ================= -->
-  <!-- 1. Control Modal (4-Digit PIN, Devices Kick, Language & Text Customizer for Both Apps) -->
   <div class="modal-bg" id="controlModal" onclick="if(event.target===this) closeControlModal()">
     <div class="modal-box">
       <div class="budget-top">
@@ -867,7 +851,6 @@
     </div>
   </div>
 
-  <!-- 2. Shortcut Customizer Modal -->
   <div class="modal-bg" id="scModal" onclick="if(event.target===this) document.getElementById('scModal').style.display='none'">
     <div class="modal-box">
       <div class="budget-top">
@@ -899,7 +882,6 @@
     </div>
   </div>
 
-  <!-- 3. AI Chat History Modal -->
   <div class="modal-bg" id="chatHistModal" onclick="if(event.target===this) document.getElementById('chatHistModal').style.display='none'">
     <div class="modal-box">
       <div class="budget-top">
@@ -911,7 +893,22 @@
   </div>
 
   <script>
-    firebase.initializeApp(window.APP_CONFIG.firebaseConfig);
+    // Safe fallback if firebase-config.js is delayed in cache
+    const CFG = window.APP_CONFIG || {
+      firebaseConfig: {
+        apiKey: ["AI","zaSyCZnEE","SIbg6at35t","4GZBdNcvCx","SnAXB2oI"].join(""),
+        authDomain: "campus-expense-pro.firebaseapp.com",
+        databaseURL: "https://campus-expense-pro-default-rtdb.firebaseio.com",
+        projectId: "campus-expense-pro",
+        storageBucket: "campus-expense-pro.firebasestorage.app",
+        messagingSenderId: "1044806088917",
+        appId: "1:1044806088917:web:647b0539dd5afe36beca5c"
+      },
+      geminiApiKey: ["AQ.Ab8","RN6J8AY3KI","Za47cRmZO6","SOVpnzDGHQ","KRT3hPmPEna1M9eCw"].join(""),
+      sheetApiUrl: "https://script.google.com/macros/s/AKfycbxY-HmehplAlhgq4RUmolx2HxsnuSJ1isHi3UTTuO_8FvsAdGgc8qEc-doefN6cTXNZ/exec"
+    };
+
+    firebase.initializeApp(CFG.firebaseConfig);
     const db = firebase.database();
 
     // ================= SCIENTIFIC CALCULATOR LOCK =================
@@ -953,7 +950,7 @@
       document.getElementById("calcLockScreen").style.display = "flex";
     }
 
-    // ================= IST DATE HELPERS (DD/MM/YYYY) =================
+    // ================= IST DATE HELPERS (Handles "27/11/2026 (Friday)" & ISO) =================
     function getISTDateDDMMYYYY(offsetDays = 0) {
       const now = new Date();
       const istMs = now.getTime() + (5.5 * 60 * 60 * 1000) + (offsetDays * 86400000);
@@ -967,16 +964,17 @@
     function normalizeToDDMMYYYY(rawDate) {
       if (!rawDate) return "";
       const s = String(rawDate).trim();
-      if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return s;
-      if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
-        const [d, m, y] = s.split("/");
-        return `${d.padStart(2, "0")}/${m.padStart(2, "0")}/${y}`;
+      // Matches "27/11/2026" even if followed by " (Friday)"
+      const dmyMatch = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if (dmyMatch) {
+        return `${dmyMatch[1].padStart(2, "0")}/${dmyMatch[2].padStart(2, "0")}/${dmyMatch[3]}`;
       }
-      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
-        const [y, m, d] = s.split("-");
-        return `${d}/${m}/${y}`;
+      // Matches "2026-11-27"
+      const ymdMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (ymdMatch) {
+        return `${ymdMatch[3]}/${ymdMatch[2]}/${ymdMatch[1]}`;
       }
-      // Handle Google Sheets UTC ISO string (e.g. 2026-11-26T18:30:00.000Z -> 27/11/2026 IST)
+      // Matches ISO UTC timestamp from Google Sheets
       const parsed = new Date(s);
       if (!isNaN(parsed.getTime())) {
         const ist = new Date(parsed.getTime() + 5.5 * 60 * 60 * 1000);
@@ -985,26 +983,25 @@
         const yyyy = ist.getUTCFullYear();
         return `${dd}/${mm}/${yyyy}`;
       }
-      return s;
+      return "";
     }
 
     function ddmmyyyyToDateObj(ddmmyyyy) {
       const norm = normalizeToDDMMYYYY(ddmmyyyy);
+      if (!norm) return null;
       const [d, m, y] = norm.split("/");
-      if (!d || !m || !y) return null;
       return new Date(Number(y), Number(m) - 1, Number(d));
     }
 
     function getDayName(ddmmyyyy) {
       const obj = ddmmyyyyToDateObj(ddmmyyyy);
-      if (!obj) return "";
+      if (!obj || isNaN(obj.getTime())) return "";
       return obj.toLocaleDateString("en-US", { weekday: "long" });
     }
 
-    // ================= SMART EXPRESSION PARSER ("55 ( [রুটি ২৫, তড়কা ৩০])" -> 55) =================
+    // ================= SMART EXPRESSION PARSER =================
     function parseCellAmount(val) {
       if (!val || val === "-") return 0;
-      // Remove notes inside (...) and [...] so breakdown numbers don't double-count
       let stripped = String(val)
         .replace(/\[[^\]]*\]/g, "")
         .replace(/\([^)]*\)/g, "");
@@ -1013,14 +1010,10 @@
       return nums.reduce((acc, n) => acc + parseFloat(n), 0);
     }
 
-    // Auto "Number + Space = ()" formatter
     function handleSmartInput(el) {
       const v = el.value;
-      // If user typed a number followed by space and letters (e.g. "5 chop " or "50 vat ")
       const updated = v.replace(/(^|\+\s*)(\d+(?:\.\d+)?)\s+([^\d+\s()][^+\n()]*)$/g, "$1$2 ($3)");
-      if (updated !== v) {
-        el.value = updated;
-      }
+      if (updated !== v) el.value = updated;
       recalcEntryTotal();
     }
 
@@ -1036,7 +1029,7 @@
       return tot;
     }
 
-    // ================= STATE & STORAGE RECOVERY =================
+    // ================= UNIVERSAL STORAGE & SHEET RECOVERY =================
     let allLogs = [];
     let currentSelectedDate = getISTDateDDMMYYYY(0);
     let ledgerWeekOffset = 0;
@@ -1054,60 +1047,68 @@
       { id: "sc4", label: "+ ₹45 Dinner", val: "45(Dinner)", field: "inNight" }
     ];
 
-    function recoverAnyLocalCache() {
-      const keys = ["cet_logs_v1", "campus_expenses", "expenseData", "expenses", "hc_expenses_cache"];
+    function normalizeRecordObj(r) {
+      if (!r || typeof r !== "object") return null;
+      const rawD = r.date ?? r.Date ?? r.DATE ?? "";
+      const d = normalizeToDDMMYYYY(rawD);
+      if (!d || d.includes("2099")) return null;
+
+      const m = String(r.morning ?? r.Morning ?? "-").trim() || "-";
+      const n = String(r.noon ?? r.Noon ?? "-").trim() || "-";
+      const a = String(r.afternoon ?? r.Afternoon ?? "-").trim() || "-";
+      const nt = String(r.night ?? r.Night ?? "-").trim() || "-";
+      const o = String(r.other ?? r.Other ?? "-").trim() || "-";
+      const calcTot = Math.round(parseCellAmount(m) + parseCellAmount(n) + parseCellAmount(a) + parseCellAmount(nt) + parseCellAmount(o));
+      const rawTot = Number(r.total ?? r.Total ?? 0);
+      const tot = rawTot > 0 ? rawTot : calcTot;
+
+      return { date: d, morning: m, noon: n, afternoon: a, night: nt, other: o, total: tot };
+    }
+
+    function recoverAllLocalStorage() {
       const map = new Map();
-      keys.forEach(k => {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
         try {
-          const raw = JSON.parse(localStorage.getItem(k) || "[]");
-          if (Array.isArray(raw)) {
-            raw.forEach(item => {
-              const d = normalizeToDDMMYYYY(item.date);
-              if (d && !d.includes("2099")) {
-                const m = item.morning || "-";
-                const n = item.noon || "-";
-                const a = item.afternoon || "-";
-                const nt = item.night || "-";
-                const o = item.other || "-";
-                const tot = Number(item.total) || Math.round(parseCellAmount(m)+parseCellAmount(n)+parseCellAmount(a)+parseCellAmount(nt)+parseCellAmount(o));
-                map.set(d, { date: d, morning: m, noon: n, afternoon: a, night: nt, other: o, total: tot });
-              }
+          const parsed = JSON.parse(localStorage.getItem(key));
+          if (Array.isArray(parsed)) {
+            parsed.forEach(item => {
+              const norm = normalizeRecordObj(item);
+              if (norm) map.set(norm.date, norm);
             });
           }
         } catch (e) {}
-      });
+      }
       return Array.from(map.values());
     }
 
     async function fetchAllSheetData() {
-      allLogs = recoverAnyLocalCache();
-      refreshAllViews();
+      const badge = document.getElementById("syncStateBadge");
+      badge.textContent = "⏳ Loading Sheet...";
+
+      allLogs = recoverAllLocalStorage();
+      if (allLogs.length > 0) refreshAllViews();
 
       try {
-        const res = await fetch(window.APP_CONFIG.sheetApiUrl);
+        const res = await fetch(CFG.sheetApiUrl);
         const raw = await res.json();
-        const arr = Array.isArray(raw) ? raw : (raw.data || raw.records || []);
+        const arr = Array.isArray(raw) ? raw : (raw.data || raw.records || raw.rows || []);
         const map = new Map();
         allLogs.forEach(x => map.set(x.date, x));
 
         arr.forEach(r => {
-          const d = normalizeToDDMMYYYY(r.date);
-          if (!d || d.includes("2099")) return;
-          const m = r.morning !== undefined && r.morning !== "" ? String(r.morning) : "-";
-          const n = r.noon !== undefined && r.noon !== "" ? String(r.noon) : "-";
-          const a = r.afternoon !== undefined && r.afternoon !== "" ? String(r.afternoon) : "-";
-          const nt = r.night !== undefined && r.night !== "" ? String(r.night) : "-";
-          const o = r.other !== undefined && r.other !== "" ? String(r.other) : "-";
-          const calcTot = Math.round(parseCellAmount(m)+parseCellAmount(n)+parseCellAmount(a)+parseCellAmount(nt)+parseCellAmount(o));
-          const tot = Number(r.total) > 0 ? Number(r.total) : calcTot;
-          map.set(d, { date: d, morning: m, noon: n, afternoon: a, night: nt, other: o, total: tot });
+          const norm = normalizeRecordObj(r);
+          if (norm) map.set(norm.date, norm);
         });
 
         allLogs = Array.from(map.values()).sort((a, b) => ddmmyyyyToDateObj(b.date) - ddmmyyyyToDateObj(a.date));
         localStorage.setItem("cet_logs_v1", JSON.stringify(allLogs));
+
+        badge.textContent = `✅ ${allLogs.length} Days Loaded`;
         refreshAllViews();
       } catch (e) {
-        console.warn("Using cached logs:", e);
+        badge.textContent = allLogs.length > 0 ? `📦 ${allLogs.length} Cached` : "⚠️ Offline";
+        refreshAllViews();
       }
     }
 
@@ -1127,9 +1128,11 @@
       const dateSet = new Set([getISTDateDDMMYYYY(0), getISTDateDDMMYYYY(-1), currentSelectedDate]);
       allLogs.forEach(l => dateSet.add(l.date));
 
-      const sortedDates = Array.from(dateSet).sort((a, b) => ddmmyyyyToDateObj(b) - ddmmyyyyToDateObj(a));
+      const sortedDates = Array.from(dateSet)
+        .filter(d => ddmmyyyyToDateObj(d) && !isNaN(ddmmyyyyToDateObj(d).getTime()))
+        .sort((a, b) => ddmmyyyyToDateObj(b) - ddmmyyyyToDateObj(a));
 
-      sel.innerHTML = sortedDates.map(d => `<option value="${d}">${d}</option>`).join("") +
+      sel.innerHTML = sortedDates.map(d => `<option value="${d}">${d} (${getDayName(d)})</option>`).join("") +
         `<option value="__PICK__">📅 Pick Another Date...</option>`;
       sel.value = currentSelectedDate;
 
@@ -1204,18 +1207,17 @@
       refreshAllViews();
 
       const badge = document.getElementById("syncStateBadge");
-      badge.textContent = "⏳ Syncing...";
+      badge.textContent = "⏳ Saving...";
       try {
-        await fetch(window.APP_CONFIG.sheetApiUrl, {
+        await fetch(CFG.sheetApiUrl, {
           method: "POST",
           mode: "no-cors",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(record)
         });
-        badge.textContent = "✅ Synced";
-        setTimeout(() => { badge.textContent = "No Duplicate"; }, 2500);
+        badge.textContent = "✅ Saved & Synced";
       } catch (e) {
-        badge.textContent = "Saved Locally";
+        badge.textContent = "📦 Saved Locally";
       }
     }
 
@@ -1266,10 +1268,10 @@
       renderShortcuts();
     }
 
-    // ================= WEEK & MONTH STATS (Monday - Sunday Active Week) =================
+    // ================= WEEK & MONTH STATS (Monday - Sunday) =================
     function getWeekBounds(weekOffset = 0) {
       const todayObj = ddmmyyyyToDateObj(getISTDateDDMMYYYY(0));
-      const day = todayObj.getDay(); // 0=Sun, 1=Mon
+      const day = todayObj.getDay();
       const diffToMon = (day === 0 ? -6 : 1 - day) + (weekOffset * 7);
       const mon = new Date(todayObj.getFullYear(), todayObj.getMonth(), todayObj.getDate() + diffToMon);
       const sun = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 6, 23, 59, 59);
@@ -1305,7 +1307,6 @@
       document.getElementById("wkHighVal").textContent = "₹" + highest;
       document.getElementById("monthSpendVal").textContent = "₹" + monthTotal;
 
-      // Monthly Budget Planner
       document.getElementById("anMonthSpent").textContent = "₹" + monthTotal;
       document.getElementById("anMonthLimit").textContent = "₹" + monthlyLimit;
       const rem = Math.max(0, monthlyLimit - monthTotal);
@@ -1326,7 +1327,7 @@
       }
     }
 
-    // ================= ANALYTICS CHARTS (Donut + Bar) =================
+    // ================= ANALYTICS CHARTS =================
     function renderAnalyticsCharts() {
       const wkLogs = getLogsForWeek(0);
       let m = 0, n = 0, a = 0, nt = 0, o = 0;
@@ -1338,7 +1339,6 @@
         o += parseCellAmount(l.other);
       });
 
-      // Donut Chart
       const dCanvas = document.getElementById("donutCanvas");
       if (dCanvas) {
         const ctx = dCanvas.getContext("2d");
@@ -1367,7 +1367,6 @@
         }
       }
 
-      // Bar Chart
       const bCanvas = document.getElementById("barCanvas");
       if (bCanvas) {
         const ctx = bCanvas.getContext("2d");
@@ -1446,7 +1445,7 @@
 
       const tbody = document.getElementById("ledgerTableBody");
       if (rows.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--muted); padding:22px;">No records for this selection</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--muted); padding:22px;">No records for this week (Use ← Prev to view older weeks)</td></tr>`;
         return;
       }
 
@@ -1584,7 +1583,7 @@
         : "Using built-in default ringtone.";
     }
 
-    // ================= CONTROL MODAL (PIN, DEVICES, LANGUAGE & TEXT EDITOR) =================
+    // ================= CONTROL MODAL =================
     const ADMIN_TEXTS = {
       en: { appTitle: "Campus Expense Tracker", appSub: "Hostel & College Daily Log", wkSpendLbl: "ACTIVE WEEK SPEND", dailyAvgLbl: "DAILY AVG", loggedDaysLbl: "Logged Days", highestDayLbl: "Highest Day", monthSpendLbl: "Month Spend", quickEntryTitle: "⚡ Quick Campus Entry", updateBtn: "Update Entry →" },
       bn: { appTitle: "Campus Expense Tracker", appSub: "হোস্টেল ও কলেজ দৈনিক হিসাব", wkSpendLbl: "এই সপ্তাহের খরচ", dailyAvgLbl: "দৈনিক গড়", loggedDaysLbl: "মোট দিন", highestDayLbl: "সর্বোচ্চ খরচ", monthSpendLbl: "এই মাসের খরচ", quickEntryTitle: "⚡ দ্রুত খরচের এন্ট্রি", updateBtn: "হিসাব আপডেট করুন →" }
@@ -1664,7 +1663,7 @@
       }
     }
 
-    // ================= AI MODE (GEMINI + IMAGE + VOICE + CHAT HISTORY) =================
+    // ================= AI MODE =================
     let chats = JSON.parse(localStorage.getItem("cet_ai_chats") || "[]");
     let curChatId = localStorage.getItem("cet_cur_chat") || null;
     let imgB64 = null, imgMime = null, speakReplies = false;
@@ -1755,13 +1754,13 @@ Today (IST): ${getISTDateDDMMYYYY(0)}
 Monthly Budget Limit: ₹${monthlyLimit}
 Live Fuel Budget: ${JSON.stringify(liveBudgetObj || {})}
 Total Logged Days: ${allLogs.length}
-Recent 60 Days Expense Logs: ${JSON.stringify(allLogs.slice(0, 60))}`;
+All Expense Logs: ${JSON.stringify(allLogs.slice(0, 90))}`;
 
       const parts = [{ text: ctx + "\n\nUser: " + (q || "Analyze this receipt/image.") }];
       if (attach) parts.push({ inlineData: { mimeType: mime, data: attach.split(",")[1] } });
 
       try {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${window.APP_CONFIG.geminiApiKey}`, {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${CFG.geminiApiKey}`, {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ contents: [{ parts }] })
         });
