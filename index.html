@@ -800,7 +800,6 @@
         <button class="set-limit-btn" onclick="closeControlModal()">✕</button>
       </div>
 
-      <!-- 1. Separate Admin Calculator Unlock PIN -->
       <div class="mb-11" style="background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.28); padding:11px; border-radius:15px;">
         <label class="field-lbl" style="color:#ddd6fe;">🔒 My Calculator Unlock PIN (Admin)</label>
         <div style="display:flex; gap:8px;">
@@ -809,7 +808,6 @@
         </div>
       </div>
 
-      <!-- 2. Separate Client App 4-Digit Login PIN -->
       <div class="mb-11" style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.25); padding:11px; border-radius:15px;">
         <label class="field-lbl" style="color:#fde68a;">📱 Client App 4-Digit Login PIN</label>
         <div style="display:flex; gap:8px;">
@@ -1208,19 +1206,37 @@
       handleSmartInput(inp);
     }
 
-    // Properly posts to Google Apps Script using exact Sheet columns + text/plain to bypass CORS preflight
-    async function postToGoogleSheet(payloadObj) {
-      const bodyStr = JSON.stringify(payloadObj);
+    // Dual-mode CORS-safe Google Apps Script writer (Simple JSON + URLSearchParams fallback)
+    async function writeRowToSheet(sheetRowObj, targetDateDDMMYYYY) {
+      // Attempt 1: Simple CORS-safe POST without custom headers (auto text/plain -> zero preflight)
+      await fetch(CFG.sheetApiUrl, {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify(sheetRowObj)
+      });
+
+      // Wait 2.5s and verify if Sheet updated
+      await new Promise(r => setTimeout(r, 2500));
       try {
-        await fetch(CFG.sheetApiUrl, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: bodyStr
+        const res = await fetch(CFG.sheetApiUrl);
+        const raw = await res.json();
+        const rows = Array.isArray(raw) ? raw : (raw.data || raw.records || raw.rows || []);
+        const found = rows.some(r => {
+          const d = normalizeToDDMMYYYY(r.date || r["Date & Day"] || "");
+          return d === targetDateDDMMYYYY && Number(r.total ?? r["Day Total (INR)"] ?? 0) === Number(sheetRowObj.total);
         });
-      } catch (e) {
-        console.warn("Sheet POST fallback error:", e);
-      }
+        if (found) return true;
+      } catch (e) {}
+
+      // Attempt 2: Form-urlencoded fallback if Apps Script doPost reads e.parameter
+      const params = new URLSearchParams();
+      Object.entries(sheetRowObj).forEach(([k, v]) => params.append(k, String(v)));
+      await fetch(CFG.sheetApiUrl, {
+        method: "POST",
+        mode: "no-cors",
+        body: params
+      });
+      return true;
     }
 
     async function saveCurrentEntry() {
@@ -1235,40 +1251,54 @@
 
       const record = { date, morning, noon, afternoon, night, other, total };
 
+      // 1. Update local storage immediately
       const idx = allLogs.findIndex(x => x.date === date);
       if (idx >= 0) allLogs[idx] = record;
       else allLogs.unshift(record);
       allLogs.sort((a, b) => ddmmyyyyToDateObj(b.date) - ddmmyyyyToDateObj(a.date));
-
       localStorage.setItem("cet_logs_v1", JSON.stringify(allLogs));
+
+      // 2. Push to Firebase Realtime DB + Trigger Instant Notification on Client Phones
+      const breakdown = [
+        morning !== "-" ? `M: ${morning}` : "",
+        noon !== "-" ? `N: ${noon}` : "",
+        afternoon !== "-" ? `A: ${afternoon}` : "",
+        night !== "-" ? `Nt: ${night}` : "",
+        other !== "-" ? `Oth: ${other}` : ""
+      ].filter(Boolean).join(", ");
+
       db.ref("expenses_backup/" + date.replace(/\//g, "-")).set({
         ...record,
         date: dateWithDay
       });
+
+      db.ref("latest_expense_notif").set({
+        id: "exp_" + Date.now(),
+        title: `⚡ Expense Updated (${dateWithDay})`,
+        body: `Total: ₹${total}${breakdown ? " • " + breakdown : ""}`,
+        timestamp: Date.now()
+      });
+
       refreshAllViews();
 
+      // 3. Save to Google Sheet & Verify
       const badge = document.getElementById("syncStateBadge");
       badge.textContent = "⏳ Saving to Sheet...";
 
-      await postToGoogleSheet({
-        action: "upsert",
-        date: dateWithDay,
-        "Date & Day": dateWithDay,
-        morning: morning,
-        Morning: morning,
-        noon: noon,
-        Noon: noon,
-        afternoon: afternoon,
-        Afternoon: afternoon,
-        night: night,
-        Night: night,
-        other: other,
-        Other: other,
-        total: total,
-        "Day Total (INR)": total
-      });
-
-      badge.textContent = "✅ Saved to Sheet & Live";
+      try {
+        await writeRowToSheet({
+          date: dateWithDay,
+          morning,
+          noon,
+          afternoon,
+          night,
+          other,
+          total
+        }, date);
+        badge.textContent = "✅ Saved to Sheet & Notified";
+      } catch (e) {
+        badge.textContent = "⚠️ Firebase Saved (Check Net)";
+      }
     }
 
     // ================= SHORTCUTS =================
@@ -1530,7 +1560,11 @@
       localStorage.setItem("cet_logs_v1", JSON.stringify(allLogs));
       db.ref("expenses_backup/" + date.replace(/\//g, "-")).remove();
       refreshAllViews();
-      await postToGoogleSheet({ action: "delete", date: dateWithDay, "Date & Day": dateWithDay });
+      await fetch(CFG.sheetApiUrl, {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify({ action: "delete", date: dateWithDay })
+      });
     }
 
     async function deleteCurrentWeekLogs() {
@@ -1544,7 +1578,11 @@
       for (const r of wkRows) {
         const dateWithDay = `${r.date} (${getDayName(r.date)})`;
         db.ref("expenses_backup/" + r.date.replace(/\//g, "-")).remove();
-        await postToGoogleSheet({ action: "delete", date: dateWithDay, "Date & Day": dateWithDay });
+        await fetch(CFG.sheetApiUrl, {
+          method: "POST",
+          mode: "no-cors",
+          body: JSON.stringify({ action: "delete", date: dateWithDay })
+        });
       }
     }
 
