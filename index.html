@@ -466,7 +466,7 @@
       </div>
       <div class="header-actions">
         <button class="hdr-icon-btn" onclick="togglePrivacy()" title="Hide/Show Amounts">👁️</button>
-        <button class="hdr-icon-btn" onclick="openControlModal()" title="Devices, PIN & Language Control">🔑</button>
+        <button class="hdr-icon-btn" onclick="openControlModal()" title="PINs, Devices & Language Control">🔑</button>
         <button class="hdr-icon-btn" onclick="lockApp()" title="Lock App">🔒</button>
       </div>
     </div>
@@ -792,15 +792,25 @@
   <div class="modal-bg" id="controlModal" onclick="if(event.target===this) closeControlModal()">
     <div class="modal-box">
       <div class="budget-top">
-        <h3 style="font-size:16px; font-weight:800;">🔑 Device, Security & Language</h3>
+        <h3 style="font-size:16px; font-weight:800;">🔑 Security, Devices & Language</h3>
         <button class="set-limit-btn" onclick="closeControlModal()">✕</button>
       </div>
 
-      <div class="mb-11">
-        <label class="field-lbl">Client App 4-Digit Login PIN</label>
+      <!-- 1. Separate Admin Calculator Unlock PIN -->
+      <div class="mb-11" style="background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.28); padding:11px; border-radius:15px;">
+        <label class="field-lbl" style="color:#ddd6fe;">🔒 My Calculator Unlock PIN (Admin)</label>
+        <div style="display:flex; gap:8px;">
+          <input type="tel" id="ctrlAdminPinInp" maxlength="8" class="inp" style="text-align:center; font-size:18px; font-weight:800; letter-spacing:6px;" placeholder="2007" />
+          <button class="update-entry-btn" style="padding:10px 14px; white-space:nowrap;" onclick="saveNewAdminCalcPin()">Change PIN</button>
+        </div>
+      </div>
+
+      <!-- 2. Separate Client App 4-Digit Login PIN -->
+      <div class="mb-11" style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.25); padding:11px; border-radius:15px;">
+        <label class="field-lbl" style="color:#fde68a;">📱 Client App 4-Digit Login PIN</label>
         <div style="display:flex; gap:8px;">
           <input type="tel" id="ctrlPinInp" maxlength="4" class="inp" style="text-align:center; font-size:18px; font-weight:800; letter-spacing:8px;" placeholder="2007" />
-          <button class="update-entry-btn" style="padding:10px 16px;" onclick="saveNewClientPin()">Save PIN</button>
+          <button class="update-entry-btn" style="padding:10px 16px; background:linear-gradient(135deg,#f59e0b,#d97706); white-space:nowrap;" onclick="saveNewClientPin()">Save PIN</button>
         </div>
       </div>
 
@@ -893,7 +903,6 @@
   </div>
 
   <script>
-    // Safe fallback if firebase-config.js is delayed in cache
     const CFG = window.APP_CONFIG || {
       firebaseConfig: {
         apiKey: ["AI","zaSyCZnEE","SIbg6at35t","4GZBdNcvCx","SnAXB2oI"].join(""),
@@ -911,7 +920,18 @@
     firebase.initializeApp(CFG.firebaseConfig);
     const db = firebase.database();
 
-    // ================= SCIENTIFIC CALCULATOR LOCK =================
+    // ================= SCIENTIFIC CALCULATOR LOCK (CUSTOMIZABLE PIN) =================
+    let adminCalcPin = localStorage.getItem("cet_admin_calc_pin") || "2007";
+    db.ref("config/adminCalcPin").on("value", snap => {
+      const val = snap.val();
+      if (val) {
+        adminCalcPin = String(val);
+        localStorage.setItem("cet_admin_calc_pin", adminCalcPin);
+        const inp = document.getElementById("ctrlAdminPinInp");
+        if (inp) inp.value = adminCalcPin;
+      }
+    });
+
     let calcExpr = "";
     function calcInput(v) {
       calcExpr += v;
@@ -927,7 +947,7 @@
       document.getElementById("calcExpr").textContent = calcExpr.replace(/Math\./g, "");
     }
     function calcEvaluate() {
-      if (calcExpr.trim() === "2007") {
+      if (calcExpr.trim() === adminCalcPin) {
         calcClear();
         document.getElementById("calcLockScreen").style.display = "none";
         document.getElementById("appShell").style.display = "block";
@@ -950,7 +970,7 @@
       document.getElementById("calcLockScreen").style.display = "flex";
     }
 
-    // ================= IST DATE HELPERS (Handles "27/11/2026 (Friday)" & ISO) =================
+    // ================= IST DATE HELPERS =================
     function getISTDateDDMMYYYY(offsetDays = 0) {
       const now = new Date();
       const istMs = now.getTime() + (5.5 * 60 * 60 * 1000) + (offsetDays * 86400000);
@@ -964,17 +984,14 @@
     function normalizeToDDMMYYYY(rawDate) {
       if (!rawDate) return "";
       const s = String(rawDate).trim();
-      // Matches "27/11/2026" even if followed by " (Friday)"
       const dmyMatch = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
       if (dmyMatch) {
         return `${dmyMatch[1].padStart(2, "0")}/${dmyMatch[2].padStart(2, "0")}/${dmyMatch[3]}`;
       }
-      // Matches "2026-11-27"
       const ymdMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
       if (ymdMatch) {
         return `${ymdMatch[3]}/${ymdMatch[2]}/${ymdMatch[1]}`;
       }
-      // Matches ISO UTC timestamp from Google Sheets
       const parsed = new Date(s);
       if (!isNaN(parsed.getTime())) {
         const ist = new Date(parsed.getTime() + 5.5 * 60 * 60 * 1000);
@@ -1268,7 +1285,7 @@
       renderShortcuts();
     }
 
-    // ================= WEEK & MONTH STATS (Monday - Sunday) =================
+    // ================= WEEK & MONTH STATS =================
     function getWeekBounds(weekOffset = 0) {
       const todayObj = ddmmyyyyToDateObj(getISTDateDDMMYYYY(0));
       const day = todayObj.getDay();
@@ -1583,7 +1600,7 @@
         : "Using built-in default ringtone.";
     }
 
-    // ================= CONTROL MODAL =================
+    // ================= CONTROL MODAL (ADMIN PIN, CLIENT PIN, DEVICES & LANGUAGE) =================
     const ADMIN_TEXTS = {
       en: { appTitle: "Campus Expense Tracker", appSub: "Hostel & College Daily Log", wkSpendLbl: "ACTIVE WEEK SPEND", dailyAvgLbl: "DAILY AVG", loggedDaysLbl: "Logged Days", highestDayLbl: "Highest Day", monthSpendLbl: "Month Spend", quickEntryTitle: "⚡ Quick Campus Entry", updateBtn: "Update Entry →" },
       bn: { appTitle: "Campus Expense Tracker", appSub: "হোস্টেল ও কলেজ দৈনিক হিসাব", wkSpendLbl: "এই সপ্তাহের খরচ", dailyAvgLbl: "দৈনিক গড়", loggedDaysLbl: "মোট দিন", highestDayLbl: "সর্বোচ্চ খরচ", monthSpendLbl: "এই মাসের খরচ", quickEntryTitle: "⚡ দ্রুত খরচের এন্ট্রি", updateBtn: "হিসাব আপডেট করুন →" }
@@ -1609,11 +1626,21 @@
     }
 
     function openControlModal() {
+      document.getElementById("ctrlAdminPinInp").value = adminCalcPin;
       document.getElementById("ctrlAdminLang").value = adminLang;
       fillTextKeyOpts();
       document.getElementById("controlModal").style.display = "flex";
     }
     function closeControlModal() { document.getElementById("controlModal").style.display = "none"; }
+
+    function saveNewAdminCalcPin() {
+      const p = document.getElementById("ctrlAdminPinInp").value.trim();
+      if (!/^\d{4,8}$/.test(p)) return alert("Enter a 4 to 8 digit numeric PIN!");
+      adminCalcPin = p;
+      localStorage.setItem("cet_admin_calc_pin", p);
+      db.ref("config/adminCalcPin").set(p);
+      alert("✅ Your Calculator Unlock PIN updated to " + p);
+    }
 
     function saveNewClientPin() {
       const p = document.getElementById("ctrlPinInp").value.trim();
