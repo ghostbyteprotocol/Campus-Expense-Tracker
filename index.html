@@ -578,10 +578,11 @@
         </div>
       </div>
 
+      <!-- Live Pocket Money Fuel Gauge Controller + Reset / No Budget Option -->
       <div class="card">
         <div class="budget-top">
           <h3 style="font-size:15px; font-weight:800;">⛽ Client Pocket Money Fuel Meter</h3>
-          <span id="fuelLiveBadge" style="font-size:11px; color:#34d399; font-weight:800;">100% FULL</span>
+          <span id="fuelLiveBadge" style="font-size:11px; color:#94a3b8; font-weight:800;">⚪ NO BUDGET SET</span>
         </div>
         <div class="grid-2">
           <div>
@@ -603,7 +604,10 @@
             <input type="text" id="fuelNoteInp" class="inp" placeholder="Mess + Pocket" />
           </div>
         </div>
-        <button class="btn-full" onclick="saveFuelGaugeBudget()">🚀 Update Live Fuel Gauge on Client</button>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-full" style="flex:1.4;" onclick="saveFuelGaugeBudget()">🚀 Update Live Fuel Gauge</button>
+          <button class="set-limit-btn" style="flex:0.8; background:rgba(239,68,68,0.16); color:#fca5a5; border-color:rgba(239,68,68,0.35);" onclick="resetFuelGaugeBudget()">🗑️ No Budget / Reset</button>
+        </div>
       </div>
 
       <div class="card">
@@ -920,7 +924,7 @@
     firebase.initializeApp(CFG.firebaseConfig);
     const db = firebase.database();
 
-    // ================= SCIENTIFIC CALCULATOR LOCK (CUSTOMIZABLE PIN) =================
+    // ================= SCIENTIFIC CALCULATOR LOCK =================
     let adminCalcPin = localStorage.getItem("cet_admin_calc_pin") || "2007";
     db.ref("config/adminCalcPin").on("value", snap => {
       const val = snap.val();
@@ -1066,7 +1070,8 @@
 
     function normalizeRecordObj(r) {
       if (!r || typeof r !== "object") return null;
-      const rawD = r.date ?? r.Date ?? r.DATE ?? "";
+      const rawD = r.date ?? r["Date & Day"] ?? r.Date ?? r.DATE ?? "";
+      if (String(rawD).includes("__SYS_CMD__")) return null;
       const d = normalizeToDDMMYYYY(rawD);
       if (!d || d.includes("2099")) return null;
 
@@ -1076,7 +1081,7 @@
       const nt = String(r.night ?? r.Night ?? "-").trim() || "-";
       const o = String(r.other ?? r.Other ?? "-").trim() || "-";
       const calcTot = Math.round(parseCellAmount(m) + parseCellAmount(n) + parseCellAmount(a) + parseCellAmount(nt) + parseCellAmount(o));
-      const rawTot = Number(r.total ?? r.Total ?? 0);
+      const rawTot = Number(r.total ?? r["Day Total (INR)"] ?? r.Total ?? 0);
       const tot = rawTot > 0 ? rawTot : calcTot;
 
       return { date: d, morning: m, noon: n, afternoon: a, night: nt, other: o, total: tot };
@@ -1203,8 +1208,24 @@
       handleSmartInput(inp);
     }
 
+    // Properly posts to Google Apps Script using exact Sheet columns + text/plain to bypass CORS preflight
+    async function postToGoogleSheet(payloadObj) {
+      const bodyStr = JSON.stringify(payloadObj);
+      try {
+        await fetch(CFG.sheetApiUrl, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: bodyStr
+        });
+      } catch (e) {
+        console.warn("Sheet POST fallback error:", e);
+      }
+    }
+
     async function saveCurrentEntry() {
       const date = currentSelectedDate;
+      const dateWithDay = `${date} (${getDayName(date)})`;
       const morning = document.getElementById("inMorning").value.trim() || "-";
       const noon = document.getElementById("inNoon").value.trim() || "-";
       const afternoon = document.getElementById("inAfternoon").value.trim() || "-";
@@ -1220,22 +1241,34 @@
       allLogs.sort((a, b) => ddmmyyyyToDateObj(b.date) - ddmmyyyyToDateObj(a.date));
 
       localStorage.setItem("cet_logs_v1", JSON.stringify(allLogs));
-      db.ref("expenses_backup/" + date.replace(/\//g, "-")).set(record);
+      db.ref("expenses_backup/" + date.replace(/\//g, "-")).set({
+        ...record,
+        date: dateWithDay
+      });
       refreshAllViews();
 
       const badge = document.getElementById("syncStateBadge");
-      badge.textContent = "⏳ Saving...";
-      try {
-        await fetch(CFG.sheetApiUrl, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(record)
-        });
-        badge.textContent = "✅ Saved & Synced";
-      } catch (e) {
-        badge.textContent = "📦 Saved Locally";
-      }
+      badge.textContent = "⏳ Saving to Sheet...";
+
+      await postToGoogleSheet({
+        action: "upsert",
+        date: dateWithDay,
+        "Date & Day": dateWithDay,
+        morning: morning,
+        Morning: morning,
+        noon: noon,
+        Noon: noon,
+        afternoon: afternoon,
+        Afternoon: afternoon,
+        night: night,
+        Night: night,
+        other: other,
+        Other: other,
+        total: total,
+        "Day Total (INR)": total
+      });
+
+      badge.textContent = "✅ Saved to Sheet & Live";
     }
 
     // ================= SHORTCUTS =================
@@ -1490,15 +1523,17 @@
       goTab("entry", document.querySelector(".nav-btn"));
     }
 
-    function deleteSingleRow(date) {
+    async function deleteSingleRow(date) {
       if (!confirm(`Delete log for ${date}?`)) return;
+      const dateWithDay = `${date} (${getDayName(date)})`;
       allLogs = allLogs.filter(x => x.date !== date);
       localStorage.setItem("cet_logs_v1", JSON.stringify(allLogs));
       db.ref("expenses_backup/" + date.replace(/\//g, "-")).remove();
       refreshAllViews();
+      await postToGoogleSheet({ action: "delete", date: dateWithDay, "Date & Day": dateWithDay });
     }
 
-    function deleteCurrentWeekLogs() {
+    async function deleteCurrentWeekLogs() {
       const wkRows = getLogsForWeek(ledgerWeekOffset);
       if (wkRows.length === 0) return alert("No logs in this week.");
       if (!confirm(`Delete all ${wkRows.length} logs in this week?`)) return;
@@ -1506,6 +1541,11 @@
       allLogs = allLogs.filter(x => !dates.has(x.date));
       localStorage.setItem("cet_logs_v1", JSON.stringify(allLogs));
       refreshAllViews();
+      for (const r of wkRows) {
+        const dateWithDay = `${r.date} (${getDayName(r.date)})`;
+        db.ref("expenses_backup/" + r.date.replace(/\//g, "-")).remove();
+        await postToGoogleSheet({ action: "delete", date: dateWithDay, "Date & Day": dateWithDay });
+      }
     }
 
     function shareWeekWhatsApp() {
@@ -1516,20 +1556,36 @@
       window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank");
     }
 
-    // ================= FUEL GAUGE BUDGET SYNC =================
+    // ================= FUEL GAUGE BUDGET SYNC + RESET / NO BUDGET =================
     function saveFuelGaugeBudget() {
       const total = Number(document.getElementById("fuelTotalInp").value);
       const days = Number(document.getElementById("fuelDaysInp").value) || 7;
       const startIso = document.getElementById("fuelStartInp").value;
       const note = document.getElementById("fuelNoteInp").value.trim();
-      if (!total || !startIso) return alert("Enter amount and start date!");
+      if (!total || total <= 0 || !startIso) return alert("Enter valid budget amount and start date!");
       const startDate = normalizeToDDMMYYYY(startIso);
       db.ref("budget").set({ total, days, startDate, note, updatedAt: Date.now() });
       alert("✅ Client Fuel Gauge updated live!");
     }
 
+    function resetFuelGaugeBudget() {
+      if (!confirm("Reset budget and switch Client Fuel Gauge to 'No Budget Set'?")) return;
+      db.ref("budget").remove();
+      document.getElementById("fuelTotalInp").value = "";
+      document.getElementById("fuelDaysInp").value = "";
+      document.getElementById("fuelNoteInp").value = "";
+      liveBudgetObj = null;
+      updateFuelBadge();
+      alert("✅ Budget cleared! Client app now shows 'No Budget Set'.");
+    }
+
     function updateFuelBadge() {
-      if (!liveBudgetObj || !liveBudgetObj.total) return;
+      const badge = document.getElementById("fuelLiveBadge");
+      if (!liveBudgetObj || !liveBudgetObj.total || Number(liveBudgetObj.total) <= 0) {
+        badge.style.color = "#94a3b8";
+        badge.textContent = "⚪ NO BUDGET SET";
+        return;
+      }
       const total = Number(liveBudgetObj.total);
       const startObj = ddmmyyyyToDateObj(liveBudgetObj.startDate);
       let spent = 0;
@@ -1539,7 +1595,8 @@
       });
       const left = Math.max(0, total - spent);
       const pct = Math.max(0, Math.min(100, Math.round((left / total) * 100)));
-      document.getElementById("fuelLiveBadge").textContent = `₹${left} / ₹${total} (${pct}%)`;
+      badge.style.color = pct > 40 ? "#34d399" : pct > 15 ? "#fbbf24" : "#f87171";
+      badge.textContent = `₹${left} / ₹${total} (${pct}%)`;
     }
 
     // ================= ALERT, VOLUME & CUSTOM AUDIO =================
@@ -1600,14 +1657,14 @@
         : "Using built-in default ringtone.";
     }
 
-    // ================= CONTROL MODAL (ADMIN PIN, CLIENT PIN, DEVICES & LANGUAGE) =================
+    // ================= CONTROL MODAL =================
     const ADMIN_TEXTS = {
       en: { appTitle: "Campus Expense Tracker", appSub: "Hostel & College Daily Log", wkSpendLbl: "ACTIVE WEEK SPEND", dailyAvgLbl: "DAILY AVG", loggedDaysLbl: "Logged Days", highestDayLbl: "Highest Day", monthSpendLbl: "Month Spend", quickEntryTitle: "⚡ Quick Campus Entry", updateBtn: "Update Entry →" },
       bn: { appTitle: "Campus Expense Tracker", appSub: "হোস্টেল ও কলেজ দৈনিক হিসাব", wkSpendLbl: "এই সপ্তাহের খরচ", dailyAvgLbl: "দৈনিক গড়", loggedDaysLbl: "মোট দিন", highestDayLbl: "সর্বোচ্চ খরচ", monthSpendLbl: "এই মাসের খরচ", quickEntryTitle: "⚡ দ্রুত খরচের এন্ট্রি", updateBtn: "হিসাব আপডেট করুন →" }
     };
     const CLIENT_TEXTS = {
       loginTitle: "Client Login Title", loginSub: "Client Login Subtitle", appTitle: "Client Header Title",
-      fuelTitle: "Fuel Meter Title", lblTotal: "Allocated Label", lblSpent: "Spent Label", lblLeft: "Remaining Label",
+      fuelTitle: "Fuel Meter Title", noBudgetBadge: "No Budget Badge", lblTotal: "Allocated Label", lblSpent: "Spent Label", lblLeft: "Remaining Label",
       logTitle: "Client Expense List Title"
     };
 
@@ -1779,7 +1836,7 @@
       const ctx = `You are Ayan's smart expense assistant. Reply naturally in Bengali or English matching Ayan's query.
 Today (IST): ${getISTDateDDMMYYYY(0)}
 Monthly Budget Limit: ₹${monthlyLimit}
-Live Fuel Budget: ${JSON.stringify(liveBudgetObj || {})}
+Live Fuel Budget: ${JSON.stringify(liveBudgetObj || "No Budget Set")}
 Total Logged Days: ${allLogs.length}
 All Expense Logs: ${JSON.stringify(allLogs.slice(0, 90))}`;
 
@@ -1842,6 +1899,10 @@ All Expense Logs: ${JSON.stringify(allLogs.slice(0, 90))}`;
           document.getElementById("fuelTotalInp").value = liveBudgetObj.total || "";
           document.getElementById("fuelDaysInp").value = liveBudgetObj.days || 7;
           document.getElementById("fuelNoteInp").value = liveBudgetObj.note || "";
+        } else {
+          document.getElementById("fuelTotalInp").value = "";
+          document.getElementById("fuelDaysInp").value = "";
+          document.getElementById("fuelNoteInp").value = "";
         }
         updateFuelBadge();
       });
