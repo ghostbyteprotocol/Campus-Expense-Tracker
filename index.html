@@ -1666,7 +1666,7 @@
       db.ref("active_alert/status").set("stopped");
     }
 
-    // Chunked Uploader supporting up to 15 MB audio files
+    // Fast 500KB Chunked Uploader supporting up to 15 MB audio files
     function uploadDeviceAudioChunked(inp) {
       const file = inp.files[0];
       if (!file) return;
@@ -1685,8 +1685,8 @@
         try {
           const fullDataUrl = e.target.result;
           const rawB64 = fullDataUrl.includes(",") ? fullDataUrl.split(",")[1] : fullDataUrl;
-          // 2,000,000 chars per chunk (divisible by 4 so Base64 padding stays valid per chunk)
-          const CHUNK_SIZE = 2000000;
+          // 500,000 chars per chunk (divisible by 4, reliable over mobile data)
+          const CHUNK_SIZE = 500000;
           const totalChunks = Math.ceil(rawB64.length / CHUNK_SIZE);
 
           await db.ref("device_audio/" + dev).remove();
@@ -1706,7 +1706,7 @@
 
           inp.value = "";
           checkDeviceAudio();
-          alert(`✅ Uploaded "${file.name}" (${totalChunks} chunks) successfully!`);
+          alert(`✅ Uploaded "${file.name}"! Target device will auto-download it within 5 seconds.`);
         } catch (err) {
           statusEl.innerHTML = `<span style="color:#f87171;">❌ Upload failed: ${err.message}</span>`;
         }
@@ -1718,8 +1718,12 @@
       const dev = document.getElementById("audioDevSelect").value;
       const snap = await db.ref(`device_audio/${dev}/meta`).once("value");
       const v = snap.val();
+      let syncNote = "";
+      if (dev !== "ALL" && devicesMap[dev]?.syncedAudio) {
+        syncNote = ` • <span style="color:#38bdf8;">Synced on phone ✓</span>`;
+      }
       document.getElementById("audioInfoTxt").innerHTML = v && v.name
-        ? `🎵 Active: <strong style="color:#34d399;">${v.name}</strong> (${v.sizeMB || ""} MB) <button class="set-limit-btn" onclick="db.ref('device_audio/${dev}').remove().then(checkDeviceAudio)">Remove</button>`
+        ? `🎵 Active: <strong style="color:#34d399;">${v.name}</strong> (${v.sizeMB || ""} MB)${syncNote} <button class="set-limit-btn" onclick="db.ref('device_audio/${dev}').remove().then(checkDeviceAudio)">Remove</button>`
         : "Using built-in default ringtone.";
     }
 
